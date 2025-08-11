@@ -14,7 +14,12 @@ type AIToolSettings struct {
 	FileName string `toml:"file_name"`
 }
 
+type AppSettings struct {
+	Language string `toml:"language"`
+}
+
 type Settings struct {
+	App    AppSettings              `toml:"app"`
 	Claude AIToolSettings            `toml:"claude"`
 	Cline  AIToolSettings            `toml:"cline"`
 	Custom map[string]AIToolSettings `toml:"custom"`
@@ -31,6 +36,9 @@ type Config struct {
 
 func DefaultSettings() *Settings {
 	return &Settings{
+		App: AppSettings{
+			Language: "",
+		},
 		Claude: AIToolSettings{
 			Generate: true,
 			Path:     "",

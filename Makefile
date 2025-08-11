@@ -11,6 +11,8 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -f CLAUDE.md .clinerules
 	@rm -f example/CLAUDE.md example/.clinerules
+	@rm -f example/config/*.md example/config/.clinerules
+	@rm -f example/cursor_rules.md example/.aider_prompt
 
 test: build
 	@cd example && ../$(BUILD_DIR)/$(BINARY_NAME)

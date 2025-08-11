@@ -9,6 +9,7 @@ import (
 
 	"github.com/cateiru/system-prompt-gen/internal/config"
 	"github.com/cateiru/system-prompt-gen/internal/generator"
+	"github.com/cateiru/system-prompt-gen/internal/i18n"
 )
 
 var (
@@ -110,36 +111,36 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	var s strings.Builder
 
-	s.WriteString(titleStyle.Render("System Prompt Generator"))
+	s.WriteString(titleStyle.Render(i18n.T("app_name")))
 	s.WriteString("\n\n")
 
 	switch m.state {
 	case stateLoading:
-		s.WriteString("📁 プロンプトファイルを収集中...\n")
-		s.WriteString("🔄 処理中です...")
+		s.WriteString(i18n.T("collecting_files") + "\n")
+		s.WriteString(i18n.T("processing"))
 
 	case stateSuccess:
-		s.WriteString(infoStyle.Render(fmt.Sprintf(
-			"✅ %d個のプロンプトファイルを発見しました\n\n"+
-				"📂 入力ディレクトリ: %s\n"+
-				"📄 出力ファイル: %s\n\n"+
-				"[Enter] 生成実行  [q] 終了",
-			len(m.files),
-			m.config.InputDir,
-			strings.Join(m.config.OutputFiles, ", "),
-		)))
+		// 出力ファイル一覧の取得
+		outputFiles := m.generator.GetGeneratedTargets()
+		
+		s.WriteString(infoStyle.Render(i18n.T("files_found", map[string]interface{}{
+			"Count":       len(m.files),
+			"InputDir":    m.config.InputDir,
+			"OutputFiles": strings.Join(outputFiles, ", "),
+		})))
 		s.WriteString("\n\n")
 
-		s.WriteString("📋 検出されたファイル:\n")
+		s.WriteString(i18n.T("detected_files") + "\n")
 		for _, file := range m.files {
 			s.WriteString(fmt.Sprintf("  • %s\n", file.Filename))
 		}
 
 	case stateError:
-		s.WriteString(errorStyle.Render("❌ エラーが発生しました"))
+		s.WriteString(errorStyle.Render(i18n.T("error_occurred")))
 		s.WriteString("\n\n")
-		s.WriteString(fmt.Sprintf("詳細: %v\n\n", m.err))
-		s.WriteString("[r] 再試行  [q] 終了")
+		s.WriteString(i18n.T("error_details", map[string]interface{}{
+			"Error": m.err,
+		}))
 	}
 
 	return s.String()

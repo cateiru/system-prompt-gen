@@ -1,5 +1,9 @@
 # System Prompt Generator 設定ファイル
 
+# アプリケーション設定
+[app]
+language = ""       # 言語設定: "ja" (日本語), "en" (英語), "" (自動検出)
+
 [claude]
 generate = true      # false だと生成されない。デフォルトは true
 path = ""           # 未指定の場合はデフォルトの位置に配置される

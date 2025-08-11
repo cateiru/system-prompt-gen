@@ -1,0 +1,78 @@
+{
+  "app_name": {
+    "description": "Application name",
+    "other": "System Prompt Generator"
+  },
+  "short_description": {
+    "description": "Short description of the application",
+    "other": "システムプロンプトファイルを統合するツール"
+  },
+  "long_description": {
+    "description": "Long description of the application",
+    "other": "system-prompt-gen は .system_prompt/*.md ファイルを収集し、\nCLAUDE.md や .clinerules などの単一ファイルに統合するツールです。"
+  },
+  "config_flag_help": {
+    "description": "Help text for config flag",
+    "other": "設定ファイルのパス"
+  },
+  "interactive_flag_help": {
+    "description": "Help text for interactive flag", 
+    "other": "インタラクティブモードで起動"
+  },
+  "config_load_error": {
+    "description": "Error message when config loading fails",
+    "other": "設定ファイルの読み込みに失敗しました: {{.Error}}"
+  },
+  "files_processed": {
+    "description": "Message showing number of files processed",
+    "other": "✅ {{.Count}}個のプロンプトファイルを統合しました"
+  },
+  "file_generated": {
+    "description": "Message showing a file was generated",
+    "other": "📄 {{.FileName}} を生成しました"
+  },
+  "collecting_files": {
+    "description": "Loading message when collecting files",
+    "other": "📁 プロンプトファイルを収集中..."
+  },
+  "processing": {
+    "description": "Processing message",
+    "other": "🔄 処理中です..."
+  },
+  "files_found": {
+    "description": "Message showing number of files found",
+    "other": "✅ {{.Count}}個のプロンプトファイルを発見しました\n\n📂 入力ディレクトリ: {{.InputDir}}\n📄 出力ファイル: {{.OutputFiles}}\n\n[Enter] 生成実行  [q] 終了"
+  },
+  "detected_files": {
+    "description": "Header for detected files list",
+    "other": "📋 検出されたファイル:"
+  },
+  "error_occurred": {
+    "description": "Error message header",
+    "other": "❌ エラーが発生しました"
+  },
+  "error_details": {
+    "description": "Error details message", 
+    "other": "詳細: {{.Error}}\n\n[r] 再試行  [q] 終了"
+  },
+  "no_prompt_files_found": {
+    "description": "Error when no prompt files are found",
+    "other": "{{.InputDir}} にプロンプトファイルが見つかりません"
+  },
+  "failed_to_collect_files": {
+    "description": "Error when file collection fails",
+    "other": "プロンプトファイルの収集に失敗しました: {{.Error}}"
+  },
+  "failed_to_write_file": {
+    "description": "Error when file writing fails",
+    "other": "{{.FileName}} の書き込みに失敗しました: {{.Error}}"
+  },
+  "failed_to_write_tool_file": {
+    "description": "Error when tool-specific file writing fails", 
+    "other": "{{.ToolName}} 用の {{.FileName}} の書き込みに失敗しました: {{.Error}}"
+  },
+  "failed_to_create_directory": {
+    "description": "Error when directory creation fails",
+    "other": "ディレクトリ {{.DirName}} の作成に失敗しました: {{.Error}}"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "app_name": {
+    "description": "Application name",
+    "other": "System Prompt Generator"
+  },
+  "short_description": {
+    "description": "Short description of the application",
+    "other": "Tool to integrate system prompt files"
+  },
+  "long_description": {
+    "description": "Long description of the application",
+    "other": "system-prompt-gen collects .system_prompt/*.md files and\nintegrates them into single files like CLAUDE.md and .clinerules."
+  },
+  "config_flag_help": {
+    "description": "Help text for config flag",
+    "other": "Path to configuration file"
+  },
+  "interactive_flag_help": {
+    "description": "Help text for interactive flag",
+    "other": "Launch in interactive mode"
+  },
+  "config_load_error": {
+    "description": "Error message when config loading fails",
+    "other": "Failed to load configuration file: {{.Error}}"
+  },
+  "files_processed": {
+    "description": "Message showing number of files processed",
+    "other": "✅ Integrated {{.Count}} prompt files"
+  },
+  "file_generated": {
+    "description": "Message showing a file was generated",
+    "other": "📄 Generated {{.FileName}}"
+  },
+  "collecting_files": {
+    "description": "Loading message when collecting files",
+    "other": "📁 Collecting prompt files..."
+  },
+  "processing": {
+    "description": "Processing message",
+    "other": "🔄 Processing..."
+  },
+  "files_found": {
+    "description": "Message showing number of files found",
+    "other": "✅ Found {{.Count}} prompt files\n\n📂 Input directory: {{.InputDir}}\n📄 Output files: {{.OutputFiles}}\n\n[Enter] Generate  [q] Quit"
+  },
+  "detected_files": {
+    "description": "Header for detected files list",
+    "other": "📋 Detected files:"
+  },
+  "error_occurred": {
+    "description": "Error message header",
+    "other": "❌ An error occurred"
+  },
+  "error_details": {
+    "description": "Error details message",
+    "other": "Details: {{.Error}}\n\n[r] Retry  [q] Quit"
+  },
+  "no_prompt_files_found": {
+    "description": "Error when no prompt files are found",
+    "other": "No prompt files found in {{.InputDir}}"
+  },
+  "failed_to_collect_files": {
+    "description": "Error when file collection fails",
+    "other": "Failed to collect prompt files: {{.Error}}"
+  },
+  "failed_to_write_file": {
+    "description": "Error when file writing fails",
+    "other": "Failed to write {{.FileName}}: {{.Error}}"
+  },
+  "failed_to_write_tool_file": {
+    "description": "Error when tool-specific file writing fails",
+    "other": "Failed to write {{.FileName}} for {{.ToolName}}: {{.Error}}"
+  },
+  "failed_to_create_directory": {
+    "description": "Error when directory creation fails",
+    "other": "Failed to create directory {{.DirName}}: {{.Error}}"
+  }
+}
