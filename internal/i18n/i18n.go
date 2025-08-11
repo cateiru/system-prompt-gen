@@ -82,7 +82,8 @@ func T(messageID string, templateData ...map[string]any) string {
 		return messageID
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
+
 	if len(templateData) > 0 {
 		data = templateData[0]
 	}

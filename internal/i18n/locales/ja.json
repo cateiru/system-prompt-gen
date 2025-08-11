@@ -16,12 +16,8 @@
     "other": "設定ファイルのパス"
   },
   "interactive_flag_help": {
-    "description": "Help text for interactive flag", 
+    "description": "Help text for interactive flag",
     "other": "インタラクティブモードで起動"
-  },
-  "config_load_error": {
-    "description": "Error message when config loading fails",
-    "other": "設定ファイルの読み込みに失敗しました: {{.Error}}"
   },
   "files_processed": {
     "description": "Message showing number of files processed",
@@ -52,7 +48,7 @@
     "other": "❌ エラーが発生しました"
   },
   "error_details": {
-    "description": "Error details message", 
+    "description": "Error details message",
     "other": "詳細: {{.Error}}\n\n[r] 再試行  [q] 終了"
   },
   "no_prompt_files_found": {
@@ -68,7 +64,7 @@
     "other": "{{.FileName}} の書き込みに失敗しました: {{.Error}}"
   },
   "failed_to_write_tool_file": {
-    "description": "Error when tool-specific file writing fails", 
+    "description": "Error when tool-specific file writing fails",
     "other": "{{.ToolName}} 用の {{.FileName}} の書き込みに失敗しました: {{.Error}}"
   },
   "failed_to_create_directory": {

@@ -51,7 +51,7 @@ func runWithCmd(cmd *cobra.Command) error {
 	// settings.tomlの読み込みを試行
 	settings, err := config.LoadSettings(settingFile)
 	if err != nil {
-		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]any{"Error": err}))
+		return fmt.Errorf("%s", err)
 	}
 
 	// i18nシステムの初期化

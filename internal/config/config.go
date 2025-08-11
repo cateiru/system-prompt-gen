@@ -126,8 +126,8 @@ func LoadSettings(settingsPath string) (*Settings, error) {
 				},
 			}
 		} else {
-			if tool.DirName == "" || tool.FileName == "" {
-				return nil, fmt.Errorf("tool %q is missing dir_name or file_name", name)
+			if tool.FileName == "" {
+				return nil, fmt.Errorf("tool %q is missing file_name", name)
 			}
 
 			newTools[name] = tool

@@ -6,7 +6,7 @@ language = "" # 言語設定: "ja" (日本語), "en" (英語), "" (自動検出)
 
 [tools.claude]
 generate = true # false だと生成されない。デフォルトは true
-dir = ""        # 未指定の場合はデフォルトの位置に配置される
+dir_name = ""   # 未指定の場合はデフォルトの位置に配置される
 file_name = ""  # 未指定の場合は CLAUDE.md になる
 
 [tools.cline]
@@ -20,4 +20,5 @@ file_name = "cursor_rules.md"
 
 [tools.aider]
 generate = true
+dir_name = ""
 file_name = ".aider_prompt"
