@@ -1,0 +1,22 @@
+# System Prompt Generator 設定ファイル
+
+[claude]
+generate = true      # false だと生成されない。デフォルトは true
+path = ""           # 未指定の場合はデフォルトの位置に配置される
+file_name = ""      # 未指定の場合は CLAUDE.md になる
+
+[cline]
+generate = true
+path = ""
+file_name = ""      # 未指定の場合は .clinerules になる
+
+# カスタム設定例
+[custom.cursor]
+generate = true
+path = "./config"
+file_name = "cursor_rules.md"
+
+[custom.aider]
+generate = true
+path = "./"
+file_name = ".aider_prompt"
