@@ -155,7 +155,7 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 					{Filename: "test.md", Content: "test"},
 				}
 				m.content = "test content"
-				
+
 				// 書き込みエラーを発生させるために無効なパスを設定
 				m.config.OutputFiles = []string{"/invalid/path/file.md"}
 			}

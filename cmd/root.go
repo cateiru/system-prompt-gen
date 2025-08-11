@@ -51,7 +51,7 @@ func runWithCmd(cmd *cobra.Command) error {
 func runWithCmdAndSettings(cmd *cobra.Command, useSettings bool) error {
 	var cfg *config.Config
 	var err error
-	
+
 	if useSettings {
 		// settings.tomlの読み込みを試行
 		settingsPath := filepath.Join(".", ".system_prompt", "settings.toml")
@@ -60,7 +60,7 @@ func runWithCmdAndSettings(cmd *cobra.Command, useSettings bool) error {
 		// レガシーモード（configのみ）
 		cfg, err = config.LoadConfig(configFile)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]interface{}{"Error": err}))
 	}
