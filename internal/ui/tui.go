@@ -25,9 +25,6 @@ var (
 			Padding(1, 2).
 			Width(50)
 
-	successStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#04B575"))
-
 	errorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FF5733"))
 )
