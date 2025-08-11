@@ -29,12 +29,7 @@ type Settings struct {
 
 // DefaultSettings はアプリケーションの設定 (Settings) のデフォルト値を返します。
 // これには App/Claude/Cline/Custom の初期値が含まれます。
-func DefaultSettings() (*Settings, error) {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
+func DefaultSettings(currentDir string) (*Settings, error) {
 	inputDir := filepath.Join(currentDir, ".system_prompt")
 
 	return &Settings{
@@ -60,13 +55,22 @@ func DefaultSettings() (*Settings, error) {
 // ファイルが存在しない場合はデフォルト設定を返します。
 // また、Claude/Cline の FileName が空の場合は既定値を補完します。
 func LoadSettings(settingsPath string) (*Settings, error) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
 	if _, err := os.Stat(settingsPath); os.IsNotExist(err) {
-		return DefaultSettings()
+		return DefaultSettings(currentDir)
 	}
 
 	var settings Settings
 	if _, err := toml.DecodeFile(settingsPath, &settings); err != nil {
 		return nil, err
+	}
+
+	if settings.App.InputDir == "" {
+		settings.App.InputDir = filepath.Join(currentDir, ".system_prompt")
 	}
 
 	// デフォルト値を設定

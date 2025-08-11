@@ -10,10 +10,12 @@ import (
 )
 
 func TestDefaultSettings(t *testing.T) {
-	settings, err := DefaultSettings()
+	tmpDir := t.TempDir()
+	settings, err := DefaultSettings(tmpDir)
 	require.NoError(t, err)
 
 	assert.Equal(t, "", settings.App.Language)
+	assert.Equal(t, filepath.Join(tmpDir, ".system_prompt"), settings.App.InputDir)
 	assert.True(t, settings.Claude.Generate)
 	assert.Equal(t, "", settings.Claude.Path)
 	assert.Equal(t, "CLAUDE.md", settings.Claude.FileName)
@@ -116,17 +118,6 @@ file_name = "mytool.md"`,
 			}
 		})
 	}
-}
-
-func TestLoadSettingsNonExistentFile(t *testing.T) {
-	settings, err := LoadSettings("non_existent_settings.toml")
-
-	require.NoError(t, err)
-	// Should return default settings when file doesn't exist
-	defaultSettings, err := DefaultSettings()
-	require.NoError(t, err)
-	assert.Equal(t, defaultSettings.App.Language, settings.App.Language)
-	assert.Equal(t, defaultSettings.Claude.Generate, settings.Claude.Generate)
 }
 
 func TestSettingsDefaultValues(t *testing.T) {

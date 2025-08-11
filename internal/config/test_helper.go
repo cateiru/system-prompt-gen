@@ -7,7 +7,9 @@ import (
 )
 
 func TestSettings(t *testing.T, appSettings ...AppSettings) *Settings {
-	settings, err := DefaultSettings()
+	inputTmpDir := t.TempDir()
+
+	settings, err := DefaultSettings(inputTmpDir)
 	require.NoError(t, err)
 
 	outputTmpDir := t.TempDir()
@@ -15,7 +17,6 @@ func TestSettings(t *testing.T, appSettings ...AppSettings) *Settings {
 	if len(appSettings) > 0 {
 		settings.App = appSettings[0]
 	} else {
-		inputTmpDir := t.TempDir()
 
 		settings.App = AppSettings{
 			Language: "en",
