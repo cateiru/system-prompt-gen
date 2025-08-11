@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/spf13/cobra"
 
@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	configFile      string
+	settingFile     string
 	interactiveMode bool
 )
 
@@ -37,40 +37,25 @@ func Execute() {
 }
 
 func init() {
-	homeDir, _ := os.UserHomeDir()
-	defaultConfigPath := filepath.Join(homeDir, ".config", "system-prompt-gen", "config.json")
+	currentDir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	defaultSettingFullPath := path.Join(currentDir, ".system_prompt", "settings.toml")
 
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", defaultConfigPath, "Path to configuration file")
+	rootCmd.PersistentFlags().StringVarP(&settingFile, "setting", "s", defaultSettingFullPath, "Path to settings.toml config file")
 	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "Launch in interactive mode")
 }
 
 func runWithCmd(cmd *cobra.Command) error {
-	return runWithCmdAndSettings(cmd, true)
-}
-
-func runWithCmdAndSettings(cmd *cobra.Command, useSettings bool) error {
-	var cfg *config.Config
-	var err error
-
-	if useSettings {
-		// settings.tomlの読み込みを試行
-		settingsPath := filepath.Join(".", ".system_prompt", "settings.toml")
-		cfg, err = config.LoadConfigWithSettings(configFile, settingsPath)
-	} else {
-		// レガシーモード（configのみ）
-		cfg, err = config.LoadConfig(configFile)
-	}
-
+	// settings.tomlの読み込みを試行
+	settings, err := config.LoadSettings(settingFile)
 	if err != nil {
-		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]interface{}{"Error": err}))
+		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]any{"Error": err}))
 	}
 
 	// i18nシステムの初期化
-	var language string
-	if cfg.Settings != nil {
-		language = cfg.Settings.App.Language
-	}
-	if err := i18n.Initialize(language); err != nil {
+	if err := i18n.Initialize(settings.App.Language); err != nil {
 		// i18n初期化に失敗した場合でも処理を続行
 		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize i18n: %v\n", err)
 	}
@@ -78,10 +63,10 @@ func runWithCmdAndSettings(cmd *cobra.Command, useSettings bool) error {
 	// i18n初期化後にコマンドの説明を更新（NOTE: 実行時に行う）
 
 	if interactiveMode {
-		return ui.RunInteractive(cfg)
+		return ui.RunInteractive(settings)
 	}
 
-	gen := generator.New(cfg)
+	gen := generator.New(settings)
 	if err := gen.Run(); err != nil {
 		return err
 	}
@@ -96,8 +81,4 @@ func runWithCmdAndSettings(cmd *cobra.Command, useSettings bool) error {
 	}
 
 	return nil
-}
-
-func run() error {
-	return runWithCmd(rootCmd)
 }
