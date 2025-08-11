@@ -13,13 +13,8 @@ import (
 	"github.com/cateiru/system-prompt-gen/internal/testutil"
 )
 
-func setupI18n() {
-	// Initialize i18n for testing - ignore errors
-	i18n.Initialize("en")
-}
-
 func TestInitialModel(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 	settings := config.TestSettings(t)
 
 	t.Run("creatable model", func(t *testing.T) {
@@ -42,7 +37,7 @@ func TestInitialModel(t *testing.T) {
 }
 
 func TestGeneratePrompts(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	settings := config.TestSettings(t)
 	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "test.md"), "# Test\nContent\n")
@@ -61,7 +56,7 @@ func TestGeneratePrompts(t *testing.T) {
 }
 
 func TestGeneratePromptsWithError(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	appSettings := config.AppSettings{
 		InputDir: "/non/existent/directory",
@@ -81,7 +76,8 @@ func TestGeneratePromptsWithError(t *testing.T) {
 }
 
 func TestModelUpdate_KeyMessages(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	settings := config.TestSettings(t)
 	m := initialModel(settings)
 
@@ -197,7 +193,8 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 }
 
 func TestModelUpdate_GenerateMsg(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	settings := config.TestSettings(t)
 	m := initialModel(settings)
 
@@ -253,7 +250,7 @@ func TestModelUpdate_GenerateMsg(t *testing.T) {
 }
 
 func TestModelView(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	settings := config.TestSettings(t)
 
@@ -313,7 +310,8 @@ func TestModelView(t *testing.T) {
 }
 
 func TestModelView_WithActualMessages(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	settings := config.TestSettings(t)
 	model := initialModel(settings)
 
@@ -339,7 +337,7 @@ func TestModelView_WithActualMessages(t *testing.T) {
 }
 
 func TestRunInteractive_BasicFlow(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	settings := config.TestSettings(t)
 

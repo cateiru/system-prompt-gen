@@ -15,11 +15,6 @@ import (
 	"github.com/cateiru/system-prompt-gen/internal/testutil"
 )
 
-func setupI18n() {
-	// Initialize i18n for testing - ignore errors
-	i18n.Initialize("en")
-}
-
 func TestNew(t *testing.T) {
 	settings := config.TestSettings(t)
 	gen := New(settings)
@@ -29,7 +24,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestCollectPromptFiles(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	settings := config.TestSettings(t)
 
@@ -65,7 +60,8 @@ func TestCollectPromptFiles(t *testing.T) {
 }
 
 func TestCollectPromptFilesEmptyDirectory(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	settings := config.TestSettings(t)
 
 	gen := New(settings)
@@ -76,7 +72,7 @@ func TestCollectPromptFilesEmptyDirectory(t *testing.T) {
 }
 
 func TestCollectPromptFilesNonExistentDirectory(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	appSettings := config.AppSettings{
 		InputDir: "/non/existent/directory",
@@ -150,7 +146,8 @@ func TestGeneratePromptWithEmptyFiles(t *testing.T) {
 }
 
 func TestWriteOutputFiles_TOMLMode(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	tempDir := t.TempDir()
 
 	settings := &config.Settings{
@@ -197,7 +194,8 @@ func TestWriteOutputFiles_TOMLMode(t *testing.T) {
 }
 
 func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	tempDir := t.TempDir()
 
 	// Change working directory to temp dir for this test
@@ -283,7 +281,7 @@ func TestGetGeneratedTargets_TOMLMode(t *testing.T) {
 }
 
 func TestRun_Success(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	settings := config.TestSettings(t)
 
@@ -306,7 +304,7 @@ func TestRun_Success(t *testing.T) {
 }
 
 func TestRun_NoFiles(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	tmpDir := t.TempDir()
 
@@ -326,7 +324,7 @@ func TestRun_NoFiles(t *testing.T) {
 }
 
 func TestRun_InvalidInputDirectory(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
 
 	appSettings := config.AppSettings{
 		Header:   "",
@@ -343,7 +341,8 @@ func TestRun_InvalidInputDirectory(t *testing.T) {
 }
 
 func TestWriteOutputFiles_DirectoryCreation(t *testing.T) {
-	setupI18n()
+	i18n.TestSetupI18n(t)
+
 	tempDir := t.TempDir()
 
 	settings := &config.Settings{
