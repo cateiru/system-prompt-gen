@@ -50,16 +50,16 @@ func init() {
 }
 
 func runWithCmd(cmd *cobra.Command) error {
-	// settings.tomlの読み込みを試行
-	settings, err := config.LoadSettings(settingFile)
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
-
 	// i18nシステムの初期化
 	if err := i18n.Initialize(language); err != nil {
 		// i18n初期化に失敗した場合でも処理を続行
 		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize i18n: %v\n", err)
+	}
+
+	// settings.tomlの読み込みを試行
+	settings, err := config.LoadSettings(settingFile)
+	if err != nil {
+		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]interface{}{"Error": err.Error()}))
 	}
 
 	// i18n初期化後にコマンドの説明を更新（NOTE: 実行時に行う）

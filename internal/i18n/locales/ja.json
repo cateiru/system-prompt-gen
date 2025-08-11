@@ -19,6 +19,10 @@
     "description": "Help text for interactive flag",
     "other": "インタラクティブモードで起動"
   },
+  "config_load_error": {
+    "description": "Error message when config loading fails",
+    "other": "設定ファイルの読み込みに失敗しました: {{.Error}}"
+  },
   "files_processed": {
     "description": "Message showing number of files processed",
     "other": "✅ {{.Count}}個のプロンプトファイルを統合しました"
