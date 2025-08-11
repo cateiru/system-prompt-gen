@@ -19,18 +19,18 @@ type AppSettings struct {
 }
 
 type Settings struct {
-	App    AppSettings              `toml:"app"`
+	App    AppSettings               `toml:"app"`
 	Claude AIToolSettings            `toml:"claude"`
 	Cline  AIToolSettings            `toml:"cline"`
 	Custom map[string]AIToolSettings `toml:"custom"`
 }
 
 type Config struct {
-	InputDir     string   `json:"inputDir"`
-	OutputFiles  []string `json:"outputFiles"`
-	ExcludeFiles []string `json:"excludeFiles"`
-	Header       string   `json:"header"`
-	Footer       string   `json:"footer"`
+	InputDir     string    `json:"inputDir"`
+	OutputFiles  []string  `json:"outputFiles"`
+	ExcludeFiles []string  `json:"excludeFiles"`
+	Header       string    `json:"header"`
+	Footer       string    `json:"footer"`
 	Settings     *Settings `json:"-"`
 }
 
@@ -55,12 +55,12 @@ func DefaultSettings() *Settings {
 
 func DefaultConfig() *Config {
 	return &Config{
-		InputDir:    ".system_prompt",
-		OutputFiles: []string{"CLAUDE.md", ".clinerules"},
+		InputDir:     ".system_prompt",
+		OutputFiles:  []string{"CLAUDE.md", ".clinerules"},
 		ExcludeFiles: []string{},
-		Header:      "# System Prompt\n\n",
-		Footer:      "",
-		Settings:    DefaultSettings(),
+		Header:       "# System Prompt\n\n",
+		Footer:       "",
+		Settings:     DefaultSettings(),
 	}
 }
 
@@ -87,7 +87,7 @@ func LoadSettings(settingsPath string) (*Settings, error) {
 
 func LoadConfig(configPath string) (*Config, error) {
 	config := DefaultConfig()
-	
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		return config, nil
 	}

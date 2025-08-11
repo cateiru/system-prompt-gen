@@ -14,21 +14,21 @@ import (
 
 var (
 	titleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
-		Padding(0, 1)
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color("#7D56F4")).
+			Padding(0, 1)
 
 	infoStyle = lipgloss.NewStyle().
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("#874BFD")).
-		Padding(1, 2).
-		Width(50)
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("#874BFD")).
+			Padding(1, 2).
+			Width(50)
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#04B575"))
+			Foreground(lipgloss.Color("#04B575"))
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF5733"))
+			Foreground(lipgloss.Color("#FF5733"))
 )
 
 type state int
@@ -122,7 +122,7 @@ func (m model) View() string {
 	case stateSuccess:
 		// 出力ファイル一覧の取得
 		outputFiles := m.generator.GetGeneratedTargets()
-		
+
 		s.WriteString(infoStyle.Render(i18n.T("files_found", map[string]interface{}{
 			"Count":       len(m.files),
 			"InputDir":    m.config.InputDir,

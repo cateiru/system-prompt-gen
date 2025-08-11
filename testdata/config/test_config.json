@@ -1,0 +1,7 @@
+{
+  "inputDir": "testdata/input",
+  "outputFiles": ["CLAUDE.md", ".clinerules"],
+  "excludeFiles": ["*_temp.md"],
+  "header": "# Test System Prompt\n\n",
+  "footer": "\n---\nEnd of system prompt\n"
+}

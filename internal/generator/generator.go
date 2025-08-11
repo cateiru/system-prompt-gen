@@ -89,7 +89,7 @@ func (g *Generator) GeneratePrompt(files []PromptFile) string {
 	for _, file := range files {
 		content.WriteString(fmt.Sprintf("# %s\n\n", strings.TrimSuffix(file.Filename, ".md")))
 		content.WriteString(file.Content)
-		
+
 		if !strings.HasSuffix(file.Content, "\n") {
 			content.WriteString("\n")
 		}
@@ -220,7 +220,7 @@ func (g *Generator) Run() error {
 	}
 
 	content := g.GeneratePrompt(files)
-	
+
 	if err := g.WriteOutputFiles(content); err != nil {
 		return err
 	}
