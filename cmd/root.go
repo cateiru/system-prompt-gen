@@ -44,7 +44,7 @@ func init() {
 	defaultSettingFullPath := path.Join(currentDir, ".system_prompt", "settings.toml")
 
 	rootCmd.PersistentFlags().StringVarP(&settingFile, "setting", "s", defaultSettingFullPath, "Path to settings.toml config file")
-	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "Launch in interactive mode")
+	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", true, "Launch in interactive mode")
 }
 
 func runWithCmd(cmd *cobra.Command) error {
