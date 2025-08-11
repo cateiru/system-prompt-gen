@@ -10,6 +10,7 @@ import (
 	"github.com/cateiru/system-prompt-gen/internal/config"
 	"github.com/cateiru/system-prompt-gen/internal/generator"
 	"github.com/cateiru/system-prompt-gen/internal/i18n"
+	"github.com/cateiru/system-prompt-gen/internal/util"
 )
 
 var (
@@ -123,10 +124,16 @@ func (m model) View() string {
 		// 出力ファイル一覧の取得
 		outputFiles := m.generator.GetGeneratedTargets()
 
+		// 相対パスに変換
+		relativeOutputFiles := make([]string, len(outputFiles))
+		for i, file := range outputFiles {
+			relativeOutputFiles[i] = util.ToRelativePath(file)
+		}
+
 		s.WriteString(infoStyle.Render(i18n.T("files_found", map[string]any{
 			"Count":       len(m.files),
-			"InputDir":    m.settings.App.InputDir,
-			"OutputFiles": strings.Join(outputFiles, ", "),
+			"InputDir":    util.ToRelativePath(m.settings.App.InputDir),
+			"OutputFiles": strings.Join(relativeOutputFiles, "\n\t- "),
 		})))
 		s.WriteString("\n\n")
 

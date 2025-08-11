@@ -11,6 +11,7 @@ import (
 	"github.com/cateiru/system-prompt-gen/internal/generator"
 	"github.com/cateiru/system-prompt-gen/internal/i18n"
 	"github.com/cateiru/system-prompt-gen/internal/ui"
+	"github.com/cateiru/system-prompt-gen/internal/util"
 )
 
 var (
@@ -59,7 +60,7 @@ func runWithCmd(cmd *cobra.Command) error {
 	// settings.tomlの読み込みを試行
 	settings, err := config.LoadSettings(settingFile)
 	if err != nil {
-		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]interface{}{"Error": err.Error()}))
+		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]any{"Error": err.Error()}))
 	}
 
 	// i18n初期化後にコマンドの説明を更新（NOTE: 実行時に行う）
@@ -74,12 +75,12 @@ func runWithCmd(cmd *cobra.Command) error {
 	}
 
 	files, _ := gen.CollectPromptFiles()
-	cmd.Printf("%s\n", i18n.T("files_processed", map[string]interface{}{"Count": len(files)}))
+	cmd.Printf("%s\n", i18n.T("files_processed", map[string]any{"Count": len(files)}))
 
 	// 生成されたファイルの一覧を表示
 	targets := gen.GetGeneratedTargets()
 	for _, target := range targets {
-		cmd.Printf("%s\n", i18n.T("file_generated", map[string]interface{}{"FileName": target}))
+		cmd.Printf("%s\n", i18n.T("file_generated", map[string]any{"FileName": util.ToRelativePath(target)}))
 	}
 
 	return nil

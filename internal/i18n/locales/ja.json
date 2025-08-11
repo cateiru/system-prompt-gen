@@ -41,7 +41,7 @@
   },
   "files_found": {
     "description": "Message showing number of files found",
-    "other": "✅ {{.Count}}個のプロンプトファイルを発見しました\n\n📂 入力ディレクトリ: {{.InputDir}}\n📄 出力ファイル: {{.OutputFiles}}\n\n[Enter] 生成実行  [q] 終了"
+    "other": "✅ {{.Count}}個のプロンプトファイルを発見しました\n\n📂 入力ディレクトリ: {{.InputDir}}\n📄 出力ファイル:\n\t- {{.OutputFiles}}\n\n[Enter] 生成実行  [q] 終了"
   },
   "detected_files": {
     "description": "Header for detected files list",
