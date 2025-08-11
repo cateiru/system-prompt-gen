@@ -1,7 +1,7 @@
 BINARY_NAME=system-prompt-gen
 BUILD_DIR=.bin
 
-.PHONY: build clean test run example test-unit test-coverage test-verbose
+.PHONY: build clean test run example test-unit test-coverage test-verbose test-pretty
 
 build:
 	@mkdir -p $(BUILD_DIR)
@@ -18,17 +18,9 @@ clean:
 
 # Run unit tests
 test-unit:
-	go test -v ./...
+	@which tparse > /dev/null || (echo "tparseがインストールされていません。'go install github.com/mfridman/tparse@latest'を実行してください" && exit 1)
+	@set -o pipefail && go test -json ./... | tparse
 
-# Run tests with coverage
-test-coverage:
-	go test -v -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "カバレッジレポートがcoverage.htmlに生成されました"
-
-# Run tests in verbose mode
-test-verbose:
-	go test -v -race -count=1 ./...
 
 # Run integration test with example
 test: build
@@ -48,8 +40,6 @@ help:
 	@echo "  build        - プログラムをビルド"
 	@echo "  clean        - ビルドファイルと生成ファイルを削除"
 	@echo "  test-unit    - ユニットテストを実行"
-	@echo "  test-coverage- カバレッジ付きでテストを実行"
-	@echo "  test-verbose - 詳細モードでテストを実行"
 	@echo "  test         - exampleディレクトリで統合テスト実行"
 	@echo "  interactive  - exampleディレクトリでインタラクティブモード実行"
 	@echo "  run          - カレントディレクトリで実行"
