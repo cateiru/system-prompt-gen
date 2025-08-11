@@ -21,6 +21,11 @@ type PromptFile struct {
 	Content  string
 }
 
+type OutputTarget struct {
+	Path     string
+	ToolName string
+}
+
 func New(cfg *config.Config) *Generator {
 	return &Generator{config: cfg}
 }
@@ -96,12 +101,97 @@ func (g *Generator) GeneratePrompt(files []PromptFile) string {
 }
 
 func (g *Generator) WriteOutputFiles(content string) error {
-	for _, outputFile := range g.config.OutputFiles {
-		if err := os.WriteFile(outputFile, []byte(content), 0644); err != nil {
-			return fmt.Errorf("failed to write %s: %w", outputFile, err)
+	if g.config.Settings == nil {
+		// 従来の方式でフォールバック
+		for _, outputFile := range g.config.OutputFiles {
+			if err := os.WriteFile(outputFile, []byte(content), 0644); err != nil {
+				return fmt.Errorf("failed to write %s: %w", outputFile, err)
+			}
+		}
+		return nil
+	}
+
+	// TOML設定を使用
+	var outputs []OutputTarget
+
+	// Claude
+	if g.config.Settings.Claude.Generate {
+		path := g.config.Settings.Claude.Path
+		if path == "" {
+			path = "."
+		}
+		outputs = append(outputs, OutputTarget{
+			Path:     filepath.Join(path, g.config.Settings.Claude.FileName),
+			ToolName: "Claude",
+		})
+	}
+
+	// Cline
+	if g.config.Settings.Cline.Generate {
+		path := g.config.Settings.Cline.Path
+		if path == "" {
+			path = "."
+		}
+		outputs = append(outputs, OutputTarget{
+			Path:     filepath.Join(path, g.config.Settings.Cline.FileName),
+			ToolName: "Cline",
+		})
+	}
+
+	// Custom tools
+	for toolName, settings := range g.config.Settings.Custom {
+		if settings.Generate && settings.Path != "" && settings.FileName != "" {
+			outputs = append(outputs, OutputTarget{
+				Path:     filepath.Join(settings.Path, settings.FileName),
+				ToolName: toolName,
+			})
 		}
 	}
+
+	// ファイル出力
+	for _, target := range outputs {
+		dir := filepath.Dir(target.Path)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dir, err)
+		}
+
+		if err := os.WriteFile(target.Path, []byte(content), 0644); err != nil {
+			return fmt.Errorf("failed to write %s for %s: %w", target.Path, target.ToolName, err)
+		}
+	}
+
 	return nil
+}
+
+func (g *Generator) GetGeneratedTargets() []string {
+	if g.config.Settings == nil {
+		return g.config.OutputFiles
+	}
+
+	var targets []string
+	if g.config.Settings.Claude.Generate {
+		path := g.config.Settings.Claude.Path
+		if path == "" {
+			path = "."
+		}
+		targets = append(targets, filepath.Join(path, g.config.Settings.Claude.FileName))
+	}
+
+	if g.config.Settings.Cline.Generate {
+		path := g.config.Settings.Cline.Path
+		if path == "" {
+			path = "."
+		}
+		targets = append(targets, filepath.Join(path, g.config.Settings.Cline.FileName))
+	}
+
+	for _, settings := range g.config.Settings.Custom {
+		if settings.Generate && settings.Path != "" && settings.FileName != "" {
+			targets = append(targets, filepath.Join(settings.Path, settings.FileName))
+		}
+	}
+
+	return targets
 }
 
 func (g *Generator) Run() error {

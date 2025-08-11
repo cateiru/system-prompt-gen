@@ -45,7 +45,9 @@ func init() {
 }
 
 func run() error {
-	cfg, err := config.LoadConfig(configFile)
+	// settings.tomlの読み込みを試行
+	settingsPath := filepath.Join(".", ".system_prompt", "settings.toml")
+	cfg, err := config.LoadConfigWithSettings(configFile, settingsPath)
 	if err != nil {
 		return fmt.Errorf("設定ファイルの読み込みに失敗しました: %w", err)
 	}
@@ -61,8 +63,11 @@ func run() error {
 
 	files, _ := gen.CollectPromptFiles()
 	fmt.Printf("✅ %d個のプロンプトファイルを統合しました\n", len(files))
-	for _, outputFile := range cfg.OutputFiles {
-		fmt.Printf("📄 %s を生成しました\n", outputFile)
+
+	// 生成されたファイルの一覧を表示
+	targets := gen.GetGeneratedTargets()
+	for _, target := range targets {
+		fmt.Printf("📄 %s を生成しました\n", target)
 	}
 
 	return nil
