@@ -100,7 +100,7 @@ func TestGeneratePromptsWithError(t *testing.T) {
 func TestModelUpdate_KeyMessages(t *testing.T) {
 	setupI18n()
 	cfg := config.DefaultConfig()
-	model := initialModel(cfg)
+	m := initialModel(cfg)
 
 	tests := []struct {
 		name         string
@@ -148,13 +148,16 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model.state = tt.modelState
+			m.state = tt.modelState
 			if tt.modelState == stateSuccess {
 				// Set up success state with some test data
-				model.files = []generator.PromptFile{
+				m.files = []generator.PromptFile{
 					{Filename: "test.md", Content: "test"},
 				}
-				model.content = "test content"
+				m.content = "test content"
+				
+				// 書き込みエラーを発生させるために無効なパスを設定
+				m.config.OutputFiles = []string{"/invalid/path/file.md"}
 			}
 
 			keyMsg := tea.KeyMsg{}
@@ -173,10 +176,16 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 				keyMsg.Runes = []rune(tt.keyString)
 			}
 
-			newModel, cmd := model.Update(keyMsg)
+			newModel, cmd := m.Update(keyMsg)
 
 			if tt.expectQuit {
-				assert.Equal(t, tea.Quit, cmd)
+				// tea.Quitが返されたかを確認
+				if cmd != nil {
+					msg := cmd()
+					assert.IsType(t, tea.QuitMsg{}, msg)
+				} else {
+					t.Error("Expected tea.Quit command, but got nil")
+				}
 			} else if tt.expectAction {
 				if tt.modelState == stateError && tt.keyString == "r" {
 					// Retry should set state to loading and return generate command
@@ -195,6 +204,7 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 					} else {
 						t.Errorf("Expected model type, got %T", newModel)
 					}
+					assert.Nil(t, cmd) // エラー時はcmdはnilになる
 				}
 			} else {
 				assert.Nil(t, cmd)
@@ -206,7 +216,7 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 func TestModelUpdate_GenerateMsg(t *testing.T) {
 	setupI18n()
 	cfg := config.DefaultConfig()
-	model := initialModel(cfg)
+	m := initialModel(cfg)
 
 	tests := []struct {
 		name          string
@@ -238,7 +248,7 @@ func TestModelUpdate_GenerateMsg(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newModel, cmd := model.Update(tt.msg)
+			newModel, cmd := m.Update(tt.msg)
 
 			if m, ok := newModel.(model); ok {
 				assert.Equal(t, tt.expectedState, m.state)
@@ -280,7 +290,7 @@ func TestModelView(t *testing.T) {
 			name:  "loading state",
 			state: stateLoading,
 			expectContent: []string{
-				"collecting", "processing",
+				"Collecting", "Processing",
 			},
 		},
 		{

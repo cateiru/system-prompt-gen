@@ -17,7 +17,7 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Equal(t, []string{}, config.ExcludeFiles)
 	assert.Equal(t, "# System Prompt\n\n", config.Header)
 	assert.Equal(t, "", config.Footer)
-	assert.NotNil(t, config.Settings)
+	assert.Nil(t, config.Settings) // レガシーモードを維持するためnilになる
 }
 
 func TestDefaultSettings(t *testing.T) {

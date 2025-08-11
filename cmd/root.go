@@ -23,7 +23,7 @@ var rootCmd = &cobra.Command{
 	Short: "Tool to integrate system prompt files",
 	Long:  "system-prompt-gen collects .system_prompt/*.md files and integrates them into single files like CLAUDE.md and .clinerules.",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := run(); err != nil {
+		if err := runWithCmd(cmd); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -44,12 +44,25 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "Launch in interactive mode")
 }
 
-func run() error {
-	// settings.tomlの読み込みを試行
-	settingsPath := filepath.Join(".", ".system_prompt", "settings.toml")
-	cfg, err := config.LoadConfigWithSettings(configFile, settingsPath)
+func runWithCmd(cmd *cobra.Command) error {
+	return runWithCmdAndSettings(cmd, true)
+}
+
+func runWithCmdAndSettings(cmd *cobra.Command, useSettings bool) error {
+	var cfg *config.Config
+	var err error
+	
+	if useSettings {
+		// settings.tomlの読み込みを試行
+		settingsPath := filepath.Join(".", ".system_prompt", "settings.toml")
+		cfg, err = config.LoadConfigWithSettings(configFile, settingsPath)
+	} else {
+		// レガシーモード（configのみ）
+		cfg, err = config.LoadConfig(configFile)
+	}
+	
 	if err != nil {
-		return fmt.Errorf(i18n.T("config_load_error", map[string]interface{}{"Error": err}))
+		return fmt.Errorf("%s", i18n.T("config_load_error", map[string]interface{}{"Error": err}))
 	}
 
 	// i18nシステムの初期化
@@ -74,13 +87,17 @@ func run() error {
 	}
 
 	files, _ := gen.CollectPromptFiles()
-	fmt.Printf(i18n.T("files_processed", map[string]interface{}{"Count": len(files)}) + "\n")
+	cmd.Printf("%s\n", i18n.T("files_processed", map[string]interface{}{"Count": len(files)}))
 
 	// 生成されたファイルの一覧を表示
 	targets := gen.GetGeneratedTargets()
 	for _, target := range targets {
-		fmt.Printf(i18n.T("file_generated", map[string]interface{}{"FileName": target}) + "\n")
+		cmd.Printf("%s\n", i18n.T("file_generated", map[string]interface{}{"FileName": target}))
 	}
 
 	return nil
+}
+
+func run() error {
+	return runWithCmd(rootCmd)
 }

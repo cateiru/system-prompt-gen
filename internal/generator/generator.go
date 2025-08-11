@@ -106,7 +106,7 @@ func (g *Generator) WriteOutputFiles(content string) error {
 		// 従来の方式でフォールバック
 		for _, outputFile := range g.config.OutputFiles {
 			if err := os.WriteFile(outputFile, []byte(content), 0644); err != nil {
-				return fmt.Errorf(i18n.T("failed_to_write_file", map[string]interface{}{
+				return fmt.Errorf("%s", i18n.T("failed_to_write_file", map[string]interface{}{
 					"FileName": outputFile,
 					"Error":    err,
 				}))
@@ -156,14 +156,14 @@ func (g *Generator) WriteOutputFiles(content string) error {
 	for _, target := range outputs {
 		dir := filepath.Dir(target.Path)
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf(i18n.T("failed_to_create_directory", map[string]interface{}{
+			return fmt.Errorf("%s", i18n.T("failed_to_create_directory", map[string]interface{}{
 				"DirName": dir,
 				"Error":   err,
 			}))
 		}
 
 		if err := os.WriteFile(target.Path, []byte(content), 0644); err != nil {
-			return fmt.Errorf(i18n.T("failed_to_write_tool_file", map[string]interface{}{
+			return fmt.Errorf("%s", i18n.T("failed_to_write_tool_file", map[string]interface{}{
 				"FileName": target.Path,
 				"ToolName": target.ToolName,
 				"Error":    err,
@@ -208,13 +208,13 @@ func (g *Generator) GetGeneratedTargets() []string {
 func (g *Generator) Run() error {
 	files, err := g.CollectPromptFiles()
 	if err != nil {
-		return fmt.Errorf(i18n.T("failed_to_collect_files", map[string]interface{}{
+		return fmt.Errorf("%s", i18n.T("failed_to_collect_files", map[string]interface{}{
 			"Error": err,
 		}))
 	}
 
 	if len(files) == 0 {
-		return fmt.Errorf(i18n.T("no_prompt_files_found", map[string]interface{}{
+		return fmt.Errorf("%s", i18n.T("no_prompt_files_found", map[string]interface{}{
 			"InputDir": g.config.InputDir,
 		}))
 	}
