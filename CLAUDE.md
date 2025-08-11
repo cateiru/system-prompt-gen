@@ -14,15 +14,14 @@ make build
 # or
 go build -o .bin/system-prompt-gen .
 
-# Test with example configuration
-make test
-# or
-cd example && ../.bin/system-prompt-gen
+# Test commands (use these for development)
+make test-unit      # Run unit tests (go test -v ./...)
+make test-coverage  # Run tests with coverage report
+make test-verbose   # Run tests with race detection
 
-# Test interactive mode
-make interactive
-# or
-cd example && ../.bin/system-prompt-gen -i
+# Integration testing with example configuration
+make test          # cd example && ../.bin/system-prompt-gen
+make interactive   # cd example && ../.bin/system-prompt-gen -i
 
 # Clean build artifacts and generated files
 make clean
@@ -33,10 +32,12 @@ make install
 
 ## Architecture and Core Components
 
-### Dual Configuration System
-The tool uses a two-tier configuration system:
-1. **JSON Config** (`~/.config/system-prompt-gen/config.json`) - Legacy global settings
-2. **TOML Settings** (`.system_prompt/settings.toml`) - Per-project AI tool configuration
+### Configuration System
+The tool primarily uses TOML-based configuration:
+1. **TOML Settings** (`.system_prompt/settings.toml`) - Main configuration for AI tool settings and app preferences
+2. **JSON Config** (legacy) - Maintained for backward compatibility only
+
+The TOML system is the preferred and actively developed configuration method.
 
 Key types in `internal/config/config.go`:
 - `Config`: Main configuration with backward compatibility
@@ -77,6 +78,8 @@ When TOML settings exist, the generator:
 - Language detection: settings.toml → LANG environment variable → fallback (ja → en)
 - All user-facing messages (CLI, TUI, errors) are localized
 - Translation files: `internal/i18n/locales/{en,ja}.json`
+- Use `i18n.T()` function for translating messages throughout the codebase
+- Error messages use localized templates with `i18n.T("message_key", map[string]interface{}{"Key": value})`
 
 ## settings.toml Configuration
 
@@ -87,19 +90,24 @@ Place `.system_prompt/settings.toml` in your working directory:
 [app]
 language = "ja"       # Language setting: "ja" (Japanese), "en" (English), "" (auto-detect)
 
-[claude]
+[tools.claude]
 generate = true       # Set to false to disable generation, default is true
-path = ""            # Unspecified defaults to current directory
-file_name = ""       # Defaults to "CLAUDE.md"
+dir_name = ""         # Directory name (empty = current directory)
+file_name = ""        # File name (empty = default: "CLAUDE.md")
 
-[cline]
+[tools.cline]
 generate = true
-path = ""
-file_name = ""       # Defaults to ".clinerules"
+dir_name = ""
+file_name = ""        # Defaults to ".clinerules"
 
-[custom.toolname]    # Add custom AI tools
+[tools.github_copilot]
+generate = false      # Built-in support for GitHub Copilot instructions
+dir_name = ".github"  # Default: .github/copilot-instructions.md
+file_name = "copilot-instructions.md"
+
+[tools.custom_tool]   # Add custom AI tools
 generate = true
-path = "./custom"    # Required for custom tools
+dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
 ```
 
@@ -109,8 +117,8 @@ file_name = "custom.md"  # Required for custom tools
 # Basic usage (uses .system_prompt/ in current directory)
 system-prompt-gen
 
-# Specify custom config file location
-system-prompt-gen -c /path/to/config.json
+# Specify custom settings file location
+system-prompt-gen -s /path/to/settings.toml
 
 # Interactive mode for preview and confirmation
 system-prompt-gen -i
