@@ -19,7 +19,6 @@ func TestSettings(t *testing.T, appSettings ...AppSettings) *Settings {
 	} else {
 
 		settings.App = AppSettings{
-			Language: "en",
 			Header:   "Test Header\n",
 			Footer:   "Test Footer\n",
 			InputDir: inputTmpDir,

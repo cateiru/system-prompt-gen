@@ -78,7 +78,6 @@ func TestCollectPromptFilesNonExistentDirectory(t *testing.T) {
 		InputDir: "/non/existent/directory",
 		Header:   "",
 		Footer:   "",
-		Language: "",
 	}
 
 	settings := config.TestSettings(t, appSettings)

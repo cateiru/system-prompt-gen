@@ -16,6 +16,7 @@ import (
 var (
 	settingFile     string
 	interactiveMode bool
+	language        string
 )
 
 var rootCmd = &cobra.Command{
@@ -45,6 +46,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&settingFile, "setting", "s", defaultSettingFullPath, "Path to settings.toml config file")
 	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", true, "Launch in interactive mode")
+	rootCmd.PersistentFlags().StringVarP(&language, "language", "l", "", "Language setting (ja, en, or empty for auto-detect)")
 }
 
 func runWithCmd(cmd *cobra.Command) error {
@@ -55,7 +57,7 @@ func runWithCmd(cmd *cobra.Command) error {
 	}
 
 	// i18nシステムの初期化
-	if err := i18n.Initialize(settings.App.Language); err != nil {
+	if err := i18n.Initialize(language); err != nil {
 		// i18n初期化に失敗した場合でも処理を続行
 		fmt.Fprintf(os.Stderr, "Warning: Failed to initialize i18n: %v\n", err)
 	}

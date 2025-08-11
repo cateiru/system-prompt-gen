@@ -22,7 +22,6 @@ type AIToolPaths struct {
 }
 
 type AppSettings struct {
-	Language  string `toml:"language"`
 	Header    string `toml:"header"`
 	Footer    string `toml:"footer"`
 	InputDir  string `toml:"input_dir"`
@@ -68,7 +67,6 @@ func DefaultSettings(currentDir string) (*Settings, error) {
 
 	return &Settings{
 		App: AppSettings{
-			Language: "",
 			InputDir: inputDir,
 		},
 		Tools: tools,

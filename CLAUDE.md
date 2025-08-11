@@ -88,7 +88,7 @@ Place `.system_prompt/settings.toml` in your working directory:
 ```toml
 # Application settings
 [app]
-language = "ja"       # Language setting: "ja" (Japanese), "en" (English), "" (auto-detect)
+# Language setting is now specified with --language (-l) flag
 
 [tools.claude]
 generate = true       # Set to false to disable generation, default is true
@@ -123,7 +123,11 @@ system-prompt-gen -s /path/to/settings.toml
 # Interactive mode for preview and confirmation
 system-prompt-gen -i
 
-# Language override via environment variable
+# Language setting via command line flag
+system-prompt-gen --language ja
+system-prompt-gen -l en
+
+# Language override via environment variable (still supported)
 LANG=en_US.UTF-8 system-prompt-gen
 
 # The tool expects a .system_prompt/ directory containing:

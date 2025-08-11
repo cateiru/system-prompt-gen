@@ -15,7 +15,7 @@ func TestDefaultSettings(t *testing.T) {
 	settings, err := DefaultSettings(tmpDir)
 	require.NoError(t, err)
 
-	assert.Equal(t, "", settings.App.Language)
+	// Language field removed from AppSettings
 	assert.Equal(t, filepath.Join(tmpDir, ".system_prompt"), settings.App.InputDir)
 }
 
@@ -47,7 +47,6 @@ dir_name = "tools"
 file_name = "mytool.md"`,
 			expectedSettings: &Settings{
 				App: AppSettings{
-					Language: "ja",
 					Header:   "header",
 					Footer:   "footer",
 				},
@@ -100,7 +99,6 @@ file_name = "mytool.md"`,
 			} else {
 				assert.NoError(t, err)
 				if tt.expectedSettings != nil {
-					assert.Equal(t, tt.expectedSettings.App.Language, settings.App.Language)
 					assert.Equal(t, tt.expectedSettings.App.Header, settings.App.Header)
 					assert.Equal(t, tt.expectedSettings.App.Footer, settings.App.Footer)
 					assert.NotEqual(t, "", settings.App.InputDir)
