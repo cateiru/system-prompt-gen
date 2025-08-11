@@ -2,6 +2,7 @@ package generator
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -20,53 +21,39 @@ func setupI18n() {
 }
 
 func TestNew(t *testing.T) {
-	cfg := config.DefaultConfig()
-	gen := New(cfg)
+	settings := config.TestSettings(t)
+	gen := New(settings)
 
 	assert.NotNil(t, gen)
-	assert.Equal(t, cfg, gen.config)
+	assert.Equal(t, settings, gen.settings)
 }
 
 func TestCollectPromptFiles(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
 
-	// Create test directory structure
-	inputDir := filepath.Join(tempDir, "input")
-	err := os.MkdirAll(inputDir, 0755)
-	require.NoError(t, err)
+	settings := config.TestSettings(t)
 
 	// Create test files
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "01_first.md"), "# First\nContent of first file\n")
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "02_second.md"), "# Second\nContent of second file\n")
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "03_excluded.md"), "# Excluded\nThis should be excluded\n")
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "not_markdown.txt"), "This is not markdown")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "01_first.md"), "# First\nContent of first file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "02_second.md"), "# Second\nContent of second file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "not_markdown.txt"), "This is not markdown")
 
 	// Create subdirectory with markdown file
-	subDir := filepath.Join(inputDir, "subdir")
-	err = os.MkdirAll(subDir, 0755)
+	subDir := filepath.Join(settings.App.InputDir, "subdir")
+	err := os.MkdirAll(subDir, 0755)
 	require.NoError(t, err)
 	testutil.CreateTestFile(t, filepath.Join(subDir, "04_subdir.md"), "# Subdir\nContent from subdirectory\n")
 
-	cfg := &config.Config{
-		InputDir:     inputDir,
-		OutputFiles:  []string{"test.md"},
-		ExcludeFiles: []string{"*_excluded.md"},
-		Header:       "# Test Header\n",
-		Footer:       "# Test Footer\n",
-		Settings:     config.DefaultSettings(),
-	}
-
-	gen := New(cfg)
+	gen := New(settings)
 	files, err := gen.CollectPromptFiles()
 
 	require.NoError(t, err)
 	assert.Len(t, files, 3) // Should find 3 .md files (excluding the excluded one and non-markdown file)
 
 	// Check files are sorted by filename
-	expectedFilenames := []string{"01_first.md", "02_second.md", "04_subdir.md"}
+	fileNames := []string{"01_first.md", "02_second.md", "04_subdir.md"}
 	for i, file := range files {
-		assert.Equal(t, expectedFilenames[i], file.Filename)
+		assert.Equal(t, fileNames[i], file.Filename)
 		assert.NotEmpty(t, file.Content)
 		assert.NotEmpty(t, file.Path)
 	}
@@ -79,18 +66,9 @@ func TestCollectPromptFiles(t *testing.T) {
 
 func TestCollectPromptFilesEmptyDirectory(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
+	settings := config.TestSettings(t)
 
-	cfg := &config.Config{
-		InputDir:     tempDir,
-		OutputFiles:  []string{"test.md"},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     config.DefaultSettings(),
-	}
-
-	gen := New(cfg)
+	gen := New(settings)
 	files, err := gen.CollectPromptFiles()
 
 	require.NoError(t, err)
@@ -99,74 +77,30 @@ func TestCollectPromptFilesEmptyDirectory(t *testing.T) {
 
 func TestCollectPromptFilesNonExistentDirectory(t *testing.T) {
 	setupI18n()
-	cfg := &config.Config{
-		InputDir:     "/non/existent/directory",
-		OutputFiles:  []string{"test.md"},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     config.DefaultSettings(),
+
+	appSettings := config.AppSettings{
+		InputDir: "/non/existent/directory",
+		Header:   "",
+		Footer:   "",
+		Language: "",
 	}
 
-	gen := New(cfg)
+	settings := config.TestSettings(t, appSettings)
+
+	gen := New(settings)
 	files, err := gen.CollectPromptFiles()
 
 	assert.Error(t, err)
 	assert.Nil(t, files)
 }
 
-func TestShouldExclude(t *testing.T) {
-	cfg := &config.Config{
-		ExcludeFiles: []string{"*_temp.md", "draft_*.md", "ignored.md"},
-	}
-	gen := New(cfg)
-
-	tests := []struct {
-		name     string
-		path     string
-		expected bool
-	}{
-		{
-			name:     "excluded temp file",
-			path:     "/some/path/test_temp.md",
-			expected: true,
-		},
-		{
-			name:     "excluded draft file",
-			path:     "/some/path/draft_article.md",
-			expected: true,
-		},
-		{
-			name:     "excluded specific file",
-			path:     "/some/path/ignored.md",
-			expected: true,
-		},
-		{
-			name:     "normal file",
-			path:     "/some/path/normal.md",
-			expected: false,
-		},
-		{
-			name:     "similar but not excluded",
-			path:     "/some/path/temp_file.md",
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := gen.shouldExclude(tt.path)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestGeneratePrompt(t *testing.T) {
-	cfg := &config.Config{
+	appSettings := config.AppSettings{
 		Header: "# System Prompt Header\n\n",
 		Footer: "\n---\nFooter content\n",
 	}
-	gen := New(cfg)
+	settings := config.TestSettings(t, appSettings)
+	gen := New(settings)
 
 	files := []PromptFile{
 		{
@@ -201,11 +135,12 @@ func TestGeneratePrompt(t *testing.T) {
 }
 
 func TestGeneratePromptWithEmptyFiles(t *testing.T) {
-	cfg := &config.Config{
+	appSettings := config.AppSettings{
 		Header: "Header\n",
 		Footer: "Footer\n",
 	}
-	gen := New(cfg)
+	settings := config.TestSettings(t, appSettings)
+	gen := New(settings)
 
 	files := []PromptFile{}
 	result := gen.GeneratePrompt(files)
@@ -214,38 +149,9 @@ func TestGeneratePromptWithEmptyFiles(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestWriteOutputFiles_LegacyMode(t *testing.T) {
-	setupI18n()
-	tempDir := testutil.TempDir(t)
-
-	outputFile1 := filepath.Join(tempDir, "output1.md")
-	outputFile2 := filepath.Join(tempDir, "output2.md")
-
-	cfg := &config.Config{
-		OutputFiles: []string{outputFile1, outputFile2},
-		Settings:    nil, // No settings = legacy mode
-	}
-	gen := New(cfg)
-
-	content := "Test content for output files"
-	err := gen.WriteOutputFiles(content)
-
-	require.NoError(t, err)
-
-	// Check both files were created with correct content
-	testutil.AssertFileExists(t, outputFile1)
-	testutil.AssertFileExists(t, outputFile2)
-
-	content1 := testutil.ReadTestFile(t, outputFile1)
-	content2 := testutil.ReadTestFile(t, outputFile2)
-
-	assert.Equal(t, content, content1)
-	assert.Equal(t, content, content2)
-}
-
 func TestWriteOutputFiles_TOMLMode(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
+	tempDir := t.TempDir()
 
 	settings := &config.Settings{
 		Claude: config.AIToolSettings{
@@ -266,11 +172,7 @@ func TestWriteOutputFiles_TOMLMode(t *testing.T) {
 			},
 		},
 	}
-
-	cfg := &config.Config{
-		Settings: settings,
-	}
-	gen := New(cfg)
+	gen := New(settings)
 
 	content := "Test content for TOML mode"
 	err := gen.WriteOutputFiles(content)
@@ -296,7 +198,7 @@ func TestWriteOutputFiles_TOMLMode(t *testing.T) {
 
 func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
+	tempDir := t.TempDir()
 
 	// Change working directory to temp dir for this test
 	originalWd, wd_err := os.Getwd()
@@ -322,10 +224,7 @@ func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
 		},
 	}
 
-	cfg := &config.Config{
-		Settings: settings,
-	}
-	gen := New(cfg)
+	gen := New(settings)
 
 	content := "Test content with empty path"
 	err := gen.WriteOutputFiles(content)
@@ -344,19 +243,6 @@ func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
 
 	assert.Equal(t, content, claudeContent)
 	assert.Equal(t, content, clineContent)
-}
-
-func TestGetGeneratedTargets_LegacyMode(t *testing.T) {
-	cfg := &config.Config{
-		OutputFiles: []string{"output1.md", "output2.md"},
-		Settings:    nil,
-	}
-	gen := New(cfg)
-
-	targets := gen.GetGeneratedTargets()
-	expected := []string{"output1.md", "output2.md"}
-
-	assert.Equal(t, expected, targets)
 }
 
 func TestGetGeneratedTargets_TOMLMode(t *testing.T) {
@@ -384,11 +270,7 @@ func TestGetGeneratedTargets_TOMLMode(t *testing.T) {
 			},
 		},
 	}
-
-	cfg := &config.Config{
-		Settings: settings,
-	}
-	gen := New(cfg)
+	gen := New(settings)
 
 	targets := gen.GetGeneratedTargets()
 
@@ -402,59 +284,41 @@ func TestGetGeneratedTargets_TOMLMode(t *testing.T) {
 
 func TestRun_Success(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
 
-	// Create input directory with test files
-	inputDir := filepath.Join(tempDir, "input")
-	err := os.MkdirAll(inputDir, 0755)
-	require.NoError(t, err)
+	settings := config.TestSettings(t)
 
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "test.md"), "# Test\nTest content\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "test.md"), "# Test\nTest content\n")
 
-	outputFile := filepath.Join(tempDir, "output.md")
-
-	cfg := &config.Config{
-		InputDir:     inputDir,
-		OutputFiles:  []string{outputFile},
-		ExcludeFiles: []string{},
-		Header:       "# Header\n",
-		Footer:       "# Footer\n",
-		Settings:     nil,
-	}
-
-	gen := New(cfg)
-	err = gen.Run()
+	gen := New(settings)
+	err := gen.Run()
 
 	require.NoError(t, err)
+
+	outputFile := path.Join(settings.Custom["test"].Path, settings.Custom["test"].FileName)
 
 	// Check output file was created
 	testutil.AssertFileExists(t, outputFile)
 	content := testutil.ReadTestFile(t, outputFile)
 
-	assert.Contains(t, content, "# Header")
+	assert.Contains(t, content, "Test Header")
 	assert.Contains(t, content, "Test content")
-	assert.Contains(t, content, "# Footer")
+	assert.Contains(t, content, "Test Footer")
 }
 
 func TestRun_NoFiles(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
 
-	// Create empty input directory
-	inputDir := filepath.Join(tempDir, "input")
-	err := os.MkdirAll(inputDir, 0755)
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	cfg := &config.Config{
-		InputDir:     inputDir,
-		OutputFiles:  []string{filepath.Join(tempDir, "output.md")},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     nil,
+	appSettings := config.AppSettings{
+		Header:   "",
+		Footer:   "",
+		InputDir: tmpDir,
 	}
 
-	gen := New(cfg)
+	settings := config.TestSettings(t, appSettings)
+
+	gen := New(settings)
 	run_err := gen.Run()
 
 	assert.Error(t, run_err)
@@ -463,16 +327,16 @@ func TestRun_NoFiles(t *testing.T) {
 
 func TestRun_InvalidInputDirectory(t *testing.T) {
 	setupI18n()
-	cfg := &config.Config{
-		InputDir:     "/non/existent/directory",
-		OutputFiles:  []string{"output.md"},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     nil,
+
+	appSettings := config.AppSettings{
+		Header:   "",
+		Footer:   "",
+		InputDir: "/non/existent/directory",
 	}
 
-	gen := New(cfg)
+	settings := config.TestSettings(t, appSettings)
+
+	gen := New(settings)
 	err := gen.Run()
 
 	assert.Error(t, err)
@@ -480,7 +344,7 @@ func TestRun_InvalidInputDirectory(t *testing.T) {
 
 func TestWriteOutputFiles_DirectoryCreation(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
+	tempDir := t.TempDir()
 
 	settings := &config.Settings{
 		Claude: config.AIToolSettings{
@@ -490,10 +354,7 @@ func TestWriteOutputFiles_DirectoryCreation(t *testing.T) {
 		},
 	}
 
-	cfg := &config.Config{
-		Settings: settings,
-	}
-	gen := New(cfg)
+	gen := New(settings)
 
 	content := "Test content for directory creation"
 	err := gen.WriteOutputFiles(content)

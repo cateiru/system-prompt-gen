@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
@@ -16,6 +17,7 @@ type AppSettings struct {
 	Language string `toml:"language"`
 	Header   string `toml:"header"`
 	Footer   string `toml:"footer"`
+	InputDir string `toml:"input_dir"`
 }
 
 type Settings struct {
@@ -27,10 +29,18 @@ type Settings struct {
 
 // DefaultSettings はアプリケーションの設定 (Settings) のデフォルト値を返します。
 // これには App/Claude/Cline/Custom の初期値が含まれます。
-func DefaultSettings() *Settings {
+func DefaultSettings() (*Settings, error) {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	inputDir := filepath.Join(currentDir, ".system_prompt")
+
 	return &Settings{
 		App: AppSettings{
 			Language: "",
+			InputDir: inputDir,
 		},
 		Claude: AIToolSettings{
 			Generate: true,
@@ -43,7 +53,7 @@ func DefaultSettings() *Settings {
 			FileName: ".clinerules",
 		},
 		Custom: make(map[string]AIToolSettings),
-	}
+	}, nil
 }
 
 // LoadSettings は指定された TOML ファイル (settingsPath) から設定を読み込みます。
@@ -51,7 +61,7 @@ func DefaultSettings() *Settings {
 // また、Claude/Cline の FileName が空の場合は既定値を補完します。
 func LoadSettings(settingsPath string) (*Settings, error) {
 	if _, err := os.Stat(settingsPath); os.IsNotExist(err) {
-		return DefaultSettings(), nil
+		return DefaultSettings()
 	}
 
 	var settings Settings

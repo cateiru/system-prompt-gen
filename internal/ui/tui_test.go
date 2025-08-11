@@ -1,13 +1,11 @@
 package ui
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/cateiru/system-prompt-gen/internal/config"
 	"github.com/cateiru/system-prompt-gen/internal/generator"
@@ -22,48 +20,34 @@ func setupI18n() {
 
 func TestInitialModel(t *testing.T) {
 	setupI18n()
-	cfg := config.DefaultConfig()
+	settings := config.TestSettings(t)
 
-	model := initialModel(cfg)
+	t.Run("creatable model", func(t *testing.T) {
+		model := initialModel(settings)
 
-	assert.Equal(t, cfg, model.config)
-	assert.NotNil(t, model.generator)
-	assert.Equal(t, stateLoading, model.state)
-	assert.Nil(t, model.files)
-	assert.Nil(t, model.err)
-	assert.Empty(t, model.content)
-}
+		assert.Equal(t, settings, model.settings)
+		assert.NotNil(t, model.generator)
+		assert.Equal(t, stateLoading, model.state)
+		assert.Nil(t, model.files)
+		assert.Nil(t, model.err)
+		assert.Empty(t, model.content)
+	})
 
-func TestModelInit(t *testing.T) {
-	setupI18n()
-	cfg := config.DefaultConfig()
-	model := initialModel(cfg)
+	t.Run("creatable cmd from model", func(t *testing.T) {
+		model := initialModel(settings)
 
-	cmd := model.Init()
-	assert.NotNil(t, cmd)
+		cmd := model.Init()
+		assert.NotNil(t, cmd)
+	})
 }
 
 func TestGeneratePrompts(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
 
-	// Create test input files
-	inputDir := filepath.Join(tempDir, "input")
-	err := os.MkdirAll(inputDir, 0755)
-	require.NoError(t, err)
+	settings := config.TestSettings(t)
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "test.md"), "# Test\nContent\n")
 
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "test.md"), "# Test\nContent\n")
-
-	cfg := &config.Config{
-		InputDir:     inputDir,
-		OutputFiles:  []string{"test.md"},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     config.DefaultSettings(),
-	}
-
-	gen := generator.New(cfg)
+	gen := generator.New(settings)
 	cmd := generatePrompts(gen)
 
 	assert.NotNil(t, cmd)
@@ -78,16 +62,15 @@ func TestGeneratePrompts(t *testing.T) {
 
 func TestGeneratePromptsWithError(t *testing.T) {
 	setupI18n()
-	cfg := &config.Config{
-		InputDir:     "/non/existent/directory",
-		OutputFiles:  []string{"test.md"},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     config.DefaultSettings(),
-	}
 
-	gen := generator.New(cfg)
+	appSettings := config.AppSettings{
+		InputDir: "/non/existent/directory",
+		Header:   "",
+		Footer:   "",
+	}
+	settings := config.TestSettings(t, appSettings)
+
+	gen := generator.New(settings)
 	cmd := generatePrompts(gen)
 
 	msg := cmd()
@@ -99,8 +82,8 @@ func TestGeneratePromptsWithError(t *testing.T) {
 
 func TestModelUpdate_KeyMessages(t *testing.T) {
 	setupI18n()
-	cfg := config.DefaultConfig()
-	m := initialModel(cfg)
+	settings := config.TestSettings(t)
+	m := initialModel(settings)
 
 	tests := []struct {
 		name         string
@@ -157,7 +140,7 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 				m.content = "test content"
 
 				// 書き込みエラーを発生させるために無効なパスを設定
-				m.config.OutputFiles = []string{"/invalid/path/file.md"}
+				m.settings.Claude.Path = "/invalid/path/file.md"
 			}
 
 			keyMsg := tea.KeyMsg{}
@@ -215,8 +198,8 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 
 func TestModelUpdate_GenerateMsg(t *testing.T) {
 	setupI18n()
-	cfg := config.DefaultConfig()
-	m := initialModel(cfg)
+	settings := config.TestSettings(t)
+	m := initialModel(settings)
 
 	tests := []struct {
 		name          string
@@ -271,13 +254,8 @@ func TestModelUpdate_GenerateMsg(t *testing.T) {
 
 func TestModelView(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
 
-	cfg := &config.Config{
-		InputDir:    tempDir,
-		OutputFiles: []string{"test.md"},
-		Settings:    config.DefaultSettings(),
-	}
+	settings := config.TestSettings(t)
 
 	tests := []struct {
 		name          string
@@ -316,7 +294,7 @@ func TestModelView(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := initialModel(cfg)
+			model := initialModel(settings)
 			model.state = tt.state
 			model.files = tt.files
 			model.err = tt.err
@@ -336,8 +314,8 @@ func TestModelView(t *testing.T) {
 
 func TestModelView_WithActualMessages(t *testing.T) {
 	setupI18n()
-	cfg := config.DefaultConfig()
-	model := initialModel(cfg)
+	settings := config.TestSettings(t)
+	model := initialModel(settings)
 
 	// Test that view doesn't panic and returns reasonable content
 	model.state = stateLoading
@@ -362,30 +340,17 @@ func TestModelView_WithActualMessages(t *testing.T) {
 
 func TestRunInteractive_BasicFlow(t *testing.T) {
 	setupI18n()
-	tempDir := testutil.TempDir(t)
 
-	// Create test input files
-	inputDir := filepath.Join(tempDir, "input")
-	err := os.MkdirAll(inputDir, 0755)
-	require.NoError(t, err)
+	settings := config.TestSettings(t)
 
-	testutil.CreateTestFile(t, filepath.Join(inputDir, "test.md"), "# Test\nContent\n")
-
-	cfg := &config.Config{
-		InputDir:     inputDir,
-		OutputFiles:  []string{filepath.Join(tempDir, "output.md")},
-		ExcludeFiles: []string{},
-		Header:       "",
-		Footer:       "",
-		Settings:     nil,
-	}
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "test.md"), "# Test\nContent\n")
 
 	// Note: This test is limited because we can't easily simulate user input
 	// in a Bubble Tea program. In a real scenario, you'd want to test with
 	// a custom program that can be controlled programmatically.
 	// For now, we just test that the function doesn't panic and the model is created correctly.
 
-	model := initialModel(cfg)
+	model := initialModel(settings)
 	assert.NotNil(t, model)
 	assert.Equal(t, stateLoading, model.state)
 }

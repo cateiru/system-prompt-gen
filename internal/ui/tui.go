@@ -40,7 +40,7 @@ const (
 )
 
 type model struct {
-	config    *config.Config
+	settings  *config.Settings
 	generator *generator.Generator
 	files     []generator.PromptFile
 	state     state
@@ -53,10 +53,10 @@ type generateMsg struct {
 	err   error
 }
 
-func initialModel(cfg *config.Config) model {
+func initialModel(settings *config.Settings) model {
 	return model{
-		config:    cfg,
-		generator: generator.New(cfg),
+		settings:  settings,
+		generator: generator.New(settings),
 		state:     stateLoading,
 	}
 }
@@ -123,9 +123,9 @@ func (m model) View() string {
 		// 出力ファイル一覧の取得
 		outputFiles := m.generator.GetGeneratedTargets()
 
-		s.WriteString(infoStyle.Render(i18n.T("files_found", map[string]interface{}{
+		s.WriteString(infoStyle.Render(i18n.T("files_found", map[string]any{
 			"Count":       len(m.files),
-			"InputDir":    m.config.InputDir,
+			"InputDir":    m.settings.App.InputDir,
 			"OutputFiles": strings.Join(outputFiles, ", "),
 		})))
 		s.WriteString("\n\n")
@@ -138,7 +138,7 @@ func (m model) View() string {
 	case stateError:
 		s.WriteString(errorStyle.Render(i18n.T("error_occurred")))
 		s.WriteString("\n\n")
-		s.WriteString(i18n.T("error_details", map[string]interface{}{
+		s.WriteString(i18n.T("error_details", map[string]any{
 			"Error": m.err,
 		}))
 	}
@@ -146,8 +146,8 @@ func (m model) View() string {
 	return s.String()
 }
 
-func RunInteractive(cfg *config.Config) error {
-	p := tea.NewProgram(initialModel(cfg))
+func RunInteractive(settings *config.Settings) error {
+	p := tea.NewProgram(initialModel(settings))
 	_, err := p.Run()
 	return err
 }

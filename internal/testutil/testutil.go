@@ -8,19 +8,6 @@ import (
 	"testing"
 )
 
-// TempDir creates a temporary directory for testing
-func TempDir(t *testing.T) string {
-	t.Helper()
-	dir, err := os.MkdirTemp("", "system-prompt-gen-test-")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	t.Cleanup(func() {
-		os.RemoveAll(dir)
-	})
-	return dir
-}
-
 // CreateTestFile creates a test file with given content
 func CreateTestFile(t *testing.T, path, content string) {
 	t.Helper()

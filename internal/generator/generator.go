@@ -13,7 +13,7 @@ import (
 )
 
 type Generator struct {
-	config *config.Config
+	settings *config.Settings
 }
 
 type PromptFile struct {
@@ -27,39 +27,38 @@ type OutputTarget struct {
 	ToolName string
 }
 
-func New(cfg *config.Config) *Generator {
-	return &Generator{config: cfg}
+func New(settings *config.Settings) *Generator {
+	return &Generator{settings: settings}
 }
 
 func (g *Generator) CollectPromptFiles() ([]PromptFile, error) {
 	var files []PromptFile
 
-	err := filepath.WalkDir(g.config.InputDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+	err := filepath.WalkDir(
+		g.settings.App.InputDir,
+		func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
 
-		if d.IsDir() || !strings.HasSuffix(path, ".md") {
+			if d.IsDir() || !strings.HasSuffix(path, ".md") {
+				return nil
+			}
+
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			files = append(files, PromptFile{
+				Path:     path,
+				Filename: d.Name(),
+				Content:  string(content),
+			})
+
 			return nil
-		}
-
-		if g.shouldExclude(path) {
-			return nil
-		}
-
-		content, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		files = append(files, PromptFile{
-			Path:     path,
-			Filename: d.Name(),
-			Content:  string(content),
-		})
-
-		return nil
-	})
+		},
+	)
 
 	if err != nil {
 		return nil, err
@@ -72,19 +71,10 @@ func (g *Generator) CollectPromptFiles() ([]PromptFile, error) {
 	return files, nil
 }
 
-func (g *Generator) shouldExclude(path string) bool {
-	for _, exclude := range g.config.ExcludeFiles {
-		if matched, _ := filepath.Match(exclude, filepath.Base(path)); matched {
-			return true
-		}
-	}
-	return false
-}
-
 func (g *Generator) GeneratePrompt(files []PromptFile) string {
 	var content strings.Builder
 
-	content.WriteString(g.config.Header)
+	content.WriteString(g.settings.App.Header)
 
 	for _, file := range files {
 		content.WriteString(fmt.Sprintf("# %s\n\n", strings.TrimSuffix(file.Filename, ".md")))
@@ -96,54 +86,43 @@ func (g *Generator) GeneratePrompt(files []PromptFile) string {
 		content.WriteString("\n")
 	}
 
-	content.WriteString(g.config.Footer)
+	content.WriteString(g.settings.App.Footer)
 
 	return content.String()
 }
 
 func (g *Generator) WriteOutputFiles(content string) error {
-	if g.config.Settings == nil {
-		// 従来の方式でフォールバック
-		for _, outputFile := range g.config.OutputFiles {
-			if err := os.WriteFile(outputFile, []byte(content), 0644); err != nil {
-				return fmt.Errorf("%s", i18n.T("failed_to_write_file", map[string]interface{}{
-					"FileName": outputFile,
-					"Error":    err,
-				}))
-			}
-		}
-		return nil
-	}
-
 	// TOML設定を使用
 	var outputs []OutputTarget
 
+	// FIXME: for でループできるようにしたい
+
 	// Claude
-	if g.config.Settings.Claude.Generate {
-		path := g.config.Settings.Claude.Path
+	if g.settings.Claude.Generate {
+		path := g.settings.Claude.Path
 		if path == "" {
 			path = "."
 		}
 		outputs = append(outputs, OutputTarget{
-			Path:     filepath.Join(path, g.config.Settings.Claude.FileName),
+			Path:     filepath.Join(path, g.settings.Claude.FileName),
 			ToolName: "Claude",
 		})
 	}
 
 	// Cline
-	if g.config.Settings.Cline.Generate {
-		path := g.config.Settings.Cline.Path
+	if g.settings.Cline.Generate {
+		path := g.settings.Cline.Path
 		if path == "" {
 			path = "."
 		}
 		outputs = append(outputs, OutputTarget{
-			Path:     filepath.Join(path, g.config.Settings.Cline.FileName),
+			Path:     filepath.Join(path, g.settings.Cline.FileName),
 			ToolName: "Cline",
 		})
 	}
 
 	// Custom tools
-	for toolName, settings := range g.config.Settings.Custom {
+	for toolName, settings := range g.settings.Custom {
 		if settings.Generate && settings.Path != "" && settings.FileName != "" {
 			outputs = append(outputs, OutputTarget{
 				Path:     filepath.Join(settings.Path, settings.FileName),
@@ -175,28 +154,24 @@ func (g *Generator) WriteOutputFiles(content string) error {
 }
 
 func (g *Generator) GetGeneratedTargets() []string {
-	if g.config.Settings == nil {
-		return g.config.OutputFiles
-	}
-
 	var targets []string
-	if g.config.Settings.Claude.Generate {
-		path := g.config.Settings.Claude.Path
+	if g.settings.Claude.Generate {
+		path := g.settings.Claude.Path
 		if path == "" {
 			path = "."
 		}
-		targets = append(targets, filepath.Join(path, g.config.Settings.Claude.FileName))
+		targets = append(targets, filepath.Join(path, g.settings.Claude.FileName))
 	}
 
-	if g.config.Settings.Cline.Generate {
-		path := g.config.Settings.Cline.Path
+	if g.settings.Cline.Generate {
+		path := g.settings.Cline.Path
 		if path == "" {
 			path = "."
 		}
-		targets = append(targets, filepath.Join(path, g.config.Settings.Cline.FileName))
+		targets = append(targets, filepath.Join(path, g.settings.Cline.FileName))
 	}
 
-	for _, settings := range g.config.Settings.Custom {
+	for _, settings := range g.settings.Custom {
 		if settings.Generate && settings.Path != "" && settings.FileName != "" {
 			targets = append(targets, filepath.Join(settings.Path, settings.FileName))
 		}
@@ -215,7 +190,7 @@ func (g *Generator) Run() error {
 
 	if len(files) == 0 {
 		return fmt.Errorf("%s", i18n.T("no_prompt_files_found", map[string]interface{}{
-			"InputDir": g.config.InputDir,
+			"InputDir": g.settings.App.InputDir,
 		}))
 	}
 

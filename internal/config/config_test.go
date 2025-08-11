@@ -10,7 +10,8 @@ import (
 )
 
 func TestDefaultSettings(t *testing.T) {
-	settings := DefaultSettings()
+	settings, err := DefaultSettings()
+	require.NoError(t, err)
 
 	assert.Equal(t, "", settings.App.Language)
 	assert.True(t, settings.Claude.Generate)
@@ -122,7 +123,8 @@ func TestLoadSettingsNonExistentFile(t *testing.T) {
 
 	require.NoError(t, err)
 	// Should return default settings when file doesn't exist
-	defaultSettings := DefaultSettings()
+	defaultSettings, err := DefaultSettings()
+	require.NoError(t, err)
 	assert.Equal(t, defaultSettings.App.Language, settings.App.Language)
 	assert.Equal(t, defaultSettings.Claude.Generate, settings.Claude.Generate)
 }
