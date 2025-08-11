@@ -3,6 +3,7 @@ package i18n
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -52,12 +53,14 @@ func Initialize(lang string) error {
 	acceptLanguages = append(acceptLanguages, "ja", "en")
 
 	localizer = i18n.NewLocalizer(bundle, acceptLanguages...)
+
 	return nil
 }
 
 // loadMessages loads messages from embedded JSON data
 func loadMessages(lang string, data []byte) error {
-	msgFile, err := bundle.ParseMessageFileBytes(data, lang+".json")
+	fileName := fmt.Sprintf("%s.json", lang)
+	msgFile, err := bundle.ParseMessageFileBytes(data, fileName)
 	if err != nil {
 		return err
 	}
@@ -73,7 +76,7 @@ func extractLangFromLangVar(langVar string) string {
 }
 
 // T returns a localized message for the given message ID
-func T(messageID string, templateData ...map[string]interface{}) string {
+func T(messageID string, templateData ...map[string]any) string {
 	if localizer == nil {
 		// Fallback if not initialized
 		return messageID
@@ -96,12 +99,12 @@ func T(messageID string, templateData ...map[string]interface{}) string {
 }
 
 // TWithCount returns a localized message with count for plural handling
-func TWithCount(messageID string, count int, templateData ...map[string]interface{}) string {
+func TWithCount(messageID string, count int, templateData ...map[string]any) string {
 	if localizer == nil {
 		return messageID
 	}
 
-	data := map[string]interface{}{"Count": count}
+	data := map[string]any{"Count": count}
 	if len(templateData) > 0 {
 		for k, v := range templateData[0] {
 			data[k] = v
