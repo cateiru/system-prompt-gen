@@ -63,7 +63,7 @@ func run() error {
 	}
 
 	// i18n初期化後にコマンドの説明を更新（NOTE: 実行時に行う）
-	
+
 	if interactiveMode {
 		return ui.RunInteractive(cfg)
 	}

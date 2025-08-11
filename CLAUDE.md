@@ -1,109 +1,124 @@
 # CLAUDE.md
 
-このファイルは、このリポジトリで作業する際のClaude Code (claude.ai/code) への指針を提供します。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## プロジェクト概要
+## Project Overview
 
-system-prompt-genは、`.system_prompt/*.md`にある複数のAIシステムプロンプトファイルを、様々なAIツール（Claude、Cline、カスタムツール）用の統合されたプロンプトファイルに集約するGo製CLIツールです。コマンドライン実行とインタラクティブなTUIモードの両方を提供します。
+system-prompt-gen is a Go CLI tool that aggregates multiple AI system prompt files from `.system_prompt/*.md` into unified prompt files for various AI tools (Claude, Cline, custom tools). It provides both command-line execution and interactive TUI modes with full internationalization support.
 
-## ビルド・開発コマンド
+## Build and Development Commands
 
 ```bash
-# プロジェクトをビルド
+# Build the project
 make build
-# または
+# or
 go build -o .bin/system-prompt-gen .
 
-# サンプル設定でテスト
+# Test with example configuration
 make test
-# または
+# or
 cd example && ../.bin/system-prompt-gen
 
-# インタラクティブモードでテスト
+# Test interactive mode
 make interactive
-# または
+# or
 cd example && ../.bin/system-prompt-gen -i
 
-# ビルド成果物と生成ファイルをクリーンアップ
+# Clean build artifacts and generated files
 make clean
 
-# システムPATHにインストール
+# Install to system PATH
 make install
 ```
 
-## アーキテクチャとコアコンポーネント
+## Architecture and Core Components
 
-### 設定システム（二層構造）
-ツールは二層の設定システムを使用します：
-1. **JSON設定** (`~/.config/system-prompt-gen/config.json`) - レガシーなグローバル設定
-2. **TOML設定** (`.system_prompt/settings.toml`) - プロジェクト毎のAIツール設定
+### Dual Configuration System
+The tool uses a two-tier configuration system:
+1. **JSON Config** (`~/.config/system-prompt-gen/config.json`) - Legacy global settings
+2. **TOML Settings** (`.system_prompt/settings.toml`) - Per-project AI tool configuration
 
-`internal/config/config.go`の重要な型：
-- `Config`: 後方互換性を持つメイン設定
-- `Settings`: TOMLベースのツール別設定
-- `AIToolSettings`: 個別ツール設定（生成フラグ、パス、ファイル名）
+Key types in `internal/config/config.go`:
+- `Config`: Main configuration with backward compatibility
+- `Settings`: TOML-based tool-specific settings
+- `AIToolSettings`: Individual tool settings (generate flags, paths, filenames)
+- `AppSettings`: Application-level settings (language preferences)
 
-### Generator処理フロー
-`internal/generator/generator.go`がコアワークフローを制御：
-1. `.system_prompt/*.md`ファイルをスキャン（設定の除外パターンを適用）
-2. ファイル名でアルファベット順にソート
-3. 設定されたヘッダー・フッターとコンテンツをマージ
-4. TOML設定に基づいて複数のターゲットに出力
+### Generator Processing Flow
+`internal/generator/generator.go` controls the core workflow:
+1. Scan `.system_prompt/*.md` files (applying exclusion patterns from config)
+2. Sort files alphabetically by filename
+3. Merge configured headers/footers with content
+4. Output to multiple targets based on TOML configuration
 
-### 設定読み込み優先順位
-システムは以下の順序で設定を読み込みます：
-1. `LoadConfigWithSettings()` でJSON設定とTOML設定の両方を試行
-2. `LoadConfig()` にフォールバック（JSON単体、後方互換性）
-3. TOMLファイルが存在しない場合は `DefaultSettings()` を使用
-4. TOMLの設定がJSON設定の出力動作を上書き
+### Configuration Loading Priority
+The system loads configuration in this order:
+1. `LoadConfigWithSettings()` attempts both JSON and TOML configurations
+2. Falls back to `LoadConfig()` (JSON only, backward compatibility)
+3. Uses `DefaultSettings()` if TOML file doesn't exist
+4. TOML settings override JSON configuration output behavior
 
-### 出力ターゲット解決
-TOML設定が存在する場合、generatorは：
-- 各AIツールの `generate` フラグをチェック
-- パスを解決（空文字列 = カレントディレクトリ）
-- 必要に応じてディレクトリを作成
-- `[custom.toolname]` セクションでカスタムツールをサポート
+### Output Target Resolution
+When TOML settings exist, the generator:
+- Checks each AI tool's `generate` flag
+- Resolves paths (empty string = current directory)
+- Creates directories as needed
+- Supports custom tools via `[custom.toolname]` sections
 
-### インタラクティブUI
-`internal/ui/tui.go` は3つの状態を持つBubble Tea TUIを提供：
-- Loading: ファイル収集フェーズ
-- Success: ファイル数とターゲットのプレビュー表示
-- Error: エラー表示と再試行オプション
+### Interactive UI
+`internal/ui/tui.go` provides a Bubble Tea TUI with three states:
+- Loading: File collection phase
+- Success: File count and target preview display
+- Error: Error display with retry option
 
-## settings.toml設定
+### Internationalization System
+`internal/i18n/i18n.go` provides comprehensive i18n support:
+- Uses `github.com/nicksnyder/go-i18n/v2` with embedded JSON translation files
+- Language detection: settings.toml → LANG environment variable → fallback (ja → en)
+- All user-facing messages (CLI, TUI, errors) are localized
+- Translation files: `internal/i18n/locales/{en,ja}.json`
 
-作業ディレクトリに `.system_prompt/settings.toml` を配置：
+## settings.toml Configuration
+
+Place `.system_prompt/settings.toml` in your working directory:
 
 ```toml
-[claude]
-generate = true
-path = ""           # デフォルトはカレントディレクトリ
-file_name = ""      # デフォルトは "CLAUDE.md"
+# Application settings
+[app]
+language = "ja"       # Language setting: "ja" (Japanese), "en" (English), "" (auto-detect)
 
-[cline] 
+[claude]
+generate = true       # Set to false to disable generation, default is true
+path = ""            # Unspecified defaults to current directory
+file_name = ""       # Defaults to "CLAUDE.md"
+
+[cline]
 generate = true
 path = ""
-file_name = ""      # デフォルトは ".clinerules"
+file_name = ""       # Defaults to ".clinerules"
 
-[custom.toolname]   # カスタムAIツールを追加
+[custom.toolname]    # Add custom AI tools
 generate = true
-path = "./custom"   # カスタムツールの場合は必須
-file_name = "custom.md"  # カスタムツールの場合は必須
+path = "./custom"    # Required for custom tools
+file_name = "custom.md"  # Required for custom tools
 ```
 
-## CLI使用パターン
+## CLI Usage Patterns
 
 ```bash
-# 基本的な使用（カレントディレクトリの .system_prompt/ を使用）
+# Basic usage (uses .system_prompt/ in current directory)
 system-prompt-gen
 
-# カスタム設定ファイルの場所を指定
+# Specify custom config file location
 system-prompt-gen -c /path/to/config.json
 
-# プレビューと確認のためのインタラクティブモード
+# Interactive mode for preview and confirmation
 system-prompt-gen -i
 
-# ツールは以下を含む .system_prompt/ ディレクトリを期待：
-# - *.md ファイル（プロンプトの断片）
-# - settings.toml（オプション、ツール固有の設定）
+# Language override via environment variable
+LANG=en_US.UTF-8 system-prompt-gen
+
+# The tool expects a .system_prompt/ directory containing:
+# - *.md files (prompt fragments)
+# - settings.toml (optional, tool-specific configuration)
 ```
