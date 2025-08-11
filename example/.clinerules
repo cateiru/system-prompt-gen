@@ -1,5 +1,3 @@
-# System Prompt
-
 # 01-base
 
 あなたは親切で知識豊富なAIアシスタントです。

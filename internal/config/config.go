@@ -1,30 +1,52 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 )
 
+type FileName string
+type DirName string
+
 type AIToolSettings struct {
-	Generate bool   `toml:"generate"`
-	Path     string `toml:"path"`
-	FileName string `toml:"file_name"`
+	Generate bool `toml:"generate"`
+	AIToolPaths
+}
+
+type AIToolPaths struct {
+	DirName  DirName  `toml:"dir_name"`
+	FileName FileName `toml:"file_name"`
 }
 
 type AppSettings struct {
-	Language string `toml:"language"`
-	Header   string `toml:"header"`
-	Footer   string `toml:"footer"`
-	InputDir string `toml:"input_dir"`
+	Language  string `toml:"language"`
+	Header    string `toml:"header"`
+	Footer    string `toml:"footer"`
+	InputDir  string `toml:"input_dir"`
+	OutputDir string `toml:"output_dir"`
 }
 
 type Settings struct {
-	App    AppSettings               `toml:"app"`
-	Claude AIToolSettings            `toml:"claude"`
-	Cline  AIToolSettings            `toml:"cline"`
-	Custom map[string]AIToolSettings `toml:"custom"`
+	App   AppSettings               `toml:"app"`
+	Tools map[string]AIToolSettings `toml:"tools"`
+}
+
+var DefaultKnownToolFileNames = map[string]AIToolPaths{
+	"claude": {
+		DirName:  "",
+		FileName: "CLAUDE.md",
+	},
+	"cline": {
+		DirName:  "",
+		FileName: ".clinerules",
+	},
+	"github_copilot": {
+		DirName:  ".github",
+		FileName: "copilot-instructions.md",
+	},
 }
 
 // DefaultSettings はアプリケーションの設定 (Settings) のデフォルト値を返します。
@@ -32,22 +54,24 @@ type Settings struct {
 func DefaultSettings(currentDir string) (*Settings, error) {
 	inputDir := filepath.Join(currentDir, ".system_prompt")
 
+	tools := make(map[string]AIToolSettings)
+
+	for name, paths := range DefaultKnownToolFileNames {
+		tools[name] = AIToolSettings{
+			Generate: true,
+			AIToolPaths: AIToolPaths{
+				DirName:  paths.DirName,
+				FileName: paths.FileName,
+			},
+		}
+	}
+
 	return &Settings{
 		App: AppSettings{
 			Language: "",
 			InputDir: inputDir,
 		},
-		Claude: AIToolSettings{
-			Generate: true,
-			Path:     "",
-			FileName: "CLAUDE.md",
-		},
-		Cline: AIToolSettings{
-			Generate: true,
-			Path:     "",
-			FileName: ".clinerules",
-		},
-		Custom: make(map[string]AIToolSettings),
+		Tools: tools,
 	}, nil
 }
 
@@ -72,15 +96,45 @@ func LoadSettings(settingsPath string) (*Settings, error) {
 	if settings.App.InputDir == "" {
 		settings.App.InputDir = filepath.Join(currentDir, ".system_prompt")
 	}
+	if settings.App.OutputDir == "" {
+		settings.App.OutputDir = currentDir
+	}
 
-	// デフォルト値を設定
-	// FIXME: この定義好きじゃない。メソッド分けたい
-	if settings.Claude.FileName == "" {
-		settings.Claude.FileName = "CLAUDE.md"
+	var newTools = make(map[string]AIToolSettings)
+
+	for name, tool := range settings.Tools {
+		if !tool.Generate {
+			continue
+		}
+
+		knownTool, ok := DefaultKnownToolFileNames[name]
+		if ok {
+			dirName := tool.DirName
+			if dirName == "" {
+				dirName = knownTool.DirName
+			}
+			fileName := tool.FileName
+			if fileName == "" {
+				fileName = knownTool.FileName
+			}
+
+			newTools[name] = AIToolSettings{
+				Generate: true,
+				AIToolPaths: AIToolPaths{
+					DirName:  dirName,
+					FileName: fileName,
+				},
+			}
+		} else {
+			if tool.DirName == "" || tool.FileName == "" {
+				return nil, fmt.Errorf("tool %q is missing dir_name or file_name", name)
+			}
+
+			newTools[name] = tool
+		}
 	}
-	if settings.Cline.FileName == "" {
-		settings.Cline.FileName = ".clinerules"
-	}
+
+	settings.Tools = newTools
 
 	return &settings, nil
 }

@@ -136,7 +136,7 @@ func TestModelUpdate_KeyMessages(t *testing.T) {
 				m.content = "test content"
 
 				// 書き込みエラーを発生させるために無効なパスを設定
-				m.settings.Claude.Path = "/invalid/path/file.md"
+				m.settings.App.OutputDir = "/invalid/path/"
 			}
 
 			keyMsg := tea.KeyMsg{}

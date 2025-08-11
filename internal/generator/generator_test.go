@@ -151,24 +151,26 @@ func TestWriteOutputFiles_TOMLMode(t *testing.T) {
 	tempDir := t.TempDir()
 
 	settings := &config.Settings{
-		Claude: config.AIToolSettings{
-			Generate: true,
-			Path:     filepath.Join(tempDir, "claude"),
-			FileName: "CLAUDE.md",
+		App: config.AppSettings{
+			InputDir:  filepath.Join(tempDir, "input"),
+			OutputDir: tempDir,
 		},
-		Cline: config.AIToolSettings{
-			Generate: false, // Should not generate
-			Path:     tempDir,
-			FileName: ".clinerules",
-		},
-		Custom: map[string]config.AIToolSettings{
-			"mytool": {
+		Tools: map[string]config.AIToolSettings{
+			"claude": config.AIToolSettings{
 				Generate: true,
-				Path:     filepath.Join(tempDir, "custom"),
-				FileName: "mytool.md",
+				AIToolPaths: config.AIToolPaths{
+					FileName: "CLAUDE.md",
+				},
+			},
+			"mytool": config.AIToolSettings{
+				Generate: true,
+				AIToolPaths: config.AIToolPaths{
+					FileName: "mytool.md",
+				},
 			},
 		},
 	}
+
 	gen := New(settings)
 
 	content := "Test content for TOML mode"
@@ -177,17 +179,13 @@ func TestWriteOutputFiles_TOMLMode(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check Claude file was created
-	claudeFile := filepath.Join(tempDir, "claude", "CLAUDE.md")
+	claudeFile := filepath.Join(tempDir, "CLAUDE.md")
 	testutil.AssertFileExists(t, claudeFile)
 	claudeContent := testutil.ReadTestFile(t, claudeFile)
 	assert.Equal(t, content, claudeContent)
 
-	// Check Cline file was NOT created (generate = false)
-	clineFile := filepath.Join(tempDir, ".clinerules")
-	testutil.AssertFileNotExists(t, clineFile)
-
 	// Check custom tool file was created
-	customFile := filepath.Join(tempDir, "custom", "mytool.md")
+	customFile := filepath.Join(tempDir, "mytool.md")
 	testutil.AssertFileExists(t, customFile)
 	customContent := testutil.ReadTestFile(t, customFile)
 	assert.Equal(t, content, customContent)
@@ -210,15 +208,22 @@ func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
 	})
 
 	settings := &config.Settings{
-		Claude: config.AIToolSettings{
-			Generate: true,
-			Path:     "", // Empty path should default to current directory
-			FileName: "CLAUDE.md",
+		App: config.AppSettings{
+			OutputDir: tempDir,
 		},
-		Cline: config.AIToolSettings{
-			Generate: true,
-			Path:     "", // Empty path should default to current directory
-			FileName: ".clinerules",
+		Tools: map[string]config.AIToolSettings{
+			"claude": {
+				Generate: true,
+				AIToolPaths: config.AIToolPaths{
+					FileName: "CLAUDE.md",
+				},
+			},
+			"cline": {
+				Generate: true,
+				AIToolPaths: config.AIToolPaths{
+					FileName: ".clinerules",
+				},
+			},
 		},
 	}
 
@@ -244,27 +249,24 @@ func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
 }
 
 func TestGetGeneratedTargets_TOMLMode(t *testing.T) {
+	tmpDir := t.TempDir()
 	settings := &config.Settings{
-		Claude: config.AIToolSettings{
-			Generate: true,
-			Path:     "claude",
-			FileName: "CLAUDE.md",
+		App: config.AppSettings{
+			OutputDir: tmpDir,
 		},
-		Cline: config.AIToolSettings{
-			Generate: false, // Should not appear in targets
-			Path:     "",
-			FileName: ".clinerules",
-		},
-		Custom: map[string]config.AIToolSettings{
+		Tools: map[string]config.AIToolSettings{
+			"claude": {
+				Generate: true,
+				AIToolPaths: config.AIToolPaths{
+					FileName: "CLAUDE.md",
+				},
+			},
 			"tool1": {
 				Generate: true,
-				Path:     "custom/tool1",
-				FileName: "tool1.md",
-			},
-			"tool2": {
-				Generate: false, // Should not appear in targets
-				Path:     "custom/tool2",
-				FileName: "tool2.md",
+				AIToolPaths: config.AIToolPaths{
+					DirName:  "custom",
+					FileName: "tool1.md",
+				},
 			},
 		},
 	}
@@ -273,8 +275,8 @@ func TestGetGeneratedTargets_TOMLMode(t *testing.T) {
 	targets := gen.GetGeneratedTargets()
 
 	expected := []string{
-		filepath.Join("claude", "CLAUDE.md"),
-		filepath.Join("custom/tool1", "tool1.md"),
+		filepath.Join(tmpDir, "CLAUDE.md"),
+		filepath.Join(tmpDir, "custom", "tool1.md"),
 	}
 
 	assert.ElementsMatch(t, expected, targets)
@@ -292,7 +294,7 @@ func TestRun_Success(t *testing.T) {
 
 	require.NoError(t, err)
 
-	outputFile := path.Join(settings.Custom["test"].Path, settings.Custom["test"].FileName)
+	outputFile := path.Join(settings.App.OutputDir, "CLAUDE.md")
 
 	// Check output file was created
 	testutil.AssertFileExists(t, outputFile)
@@ -346,10 +348,17 @@ func TestWriteOutputFiles_DirectoryCreation(t *testing.T) {
 	tempDir := t.TempDir()
 
 	settings := &config.Settings{
-		Claude: config.AIToolSettings{
-			Generate: true,
-			Path:     filepath.Join(tempDir, "deep", "nested", "directory"),
-			FileName: "CLAUDE.md",
+		App: config.AppSettings{
+			OutputDir: tempDir,
+		},
+		Tools: map[string]config.AIToolSettings{
+			"claude": {
+				Generate: true,
+				AIToolPaths: config.AIToolPaths{
+					DirName:  "deep/nested/directory",
+					FileName: "CLAUDE.md",
+				},
+			},
 		},
 	}
 

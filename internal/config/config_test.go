@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,13 +17,6 @@ func TestDefaultSettings(t *testing.T) {
 
 	assert.Equal(t, "", settings.App.Language)
 	assert.Equal(t, filepath.Join(tmpDir, ".system_prompt"), settings.App.InputDir)
-	assert.True(t, settings.Claude.Generate)
-	assert.Equal(t, "", settings.Claude.Path)
-	assert.Equal(t, "CLAUDE.md", settings.Claude.FileName)
-	assert.True(t, settings.Cline.Generate)
-	assert.Equal(t, "", settings.Cline.Path)
-	assert.Equal(t, ".clinerules", settings.Cline.FileName)
-	assert.NotNil(t, settings.Custom)
 }
 
 func TestLoadSettings(t *testing.T) {
@@ -36,40 +30,44 @@ func TestLoadSettings(t *testing.T) {
 			name: "valid settings",
 			settingsContent: `[app]
 language = "ja"
+header = "header"
+footer = "footer"
 
-[claude]
+[tools.claude]
 generate = false
-path = "custom/path"
+dir_name = "custom/path"
 file_name = "custom.md"
 
-[cline]
+[tools.cline]
 generate = true
-path = ""
-file_name = ""
 
-[custom.mytool]
+[tools.mytool]
 generate = true
-path = "tools"
+dir_name = "tools"
 file_name = "mytool.md"`,
 			expectedSettings: &Settings{
 				App: AppSettings{
 					Language: "ja",
+					Header:   "header",
+					Footer:   "footer",
 				},
-				Claude: AIToolSettings{
-					Generate: false,
-					Path:     "custom/path",
-					FileName: "custom.md",
-				},
-				Cline: AIToolSettings{
-					Generate: true,
-					Path:     "",
-					FileName: ".clinerules", // Should be set to default
-				},
-				Custom: map[string]AIToolSettings{
+				Tools: map[string]AIToolSettings{
+					"claude": {
+						Generate: false,
+					},
+					"cline": {
+						Generate: true,
+						AIToolPaths: AIToolPaths{
+							DirName:  "",
+							FileName: ".clinerules",
+						},
+					},
 					"mytool": {
 						Generate: true,
-						Path:     "tools",
-						FileName: "mytool.md",
+						AIToolPaths: AIToolPaths{
+							DirName:  "tools",
+							FileName: "mytool.md",
+						},
 					},
 				},
 			},
@@ -95,24 +93,27 @@ file_name = "mytool.md"`,
 
 			settings, err := LoadSettings(settingsPath)
 
+			fmt.Println(settings)
+
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 				if tt.expectedSettings != nil {
 					assert.Equal(t, tt.expectedSettings.App.Language, settings.App.Language)
-					assert.Equal(t, tt.expectedSettings.Claude.Generate, settings.Claude.Generate)
-					assert.Equal(t, tt.expectedSettings.Claude.Path, settings.Claude.Path)
-					assert.Equal(t, tt.expectedSettings.Claude.FileName, settings.Claude.FileName)
-					assert.Equal(t, tt.expectedSettings.Cline.Generate, settings.Cline.Generate)
-					assert.Equal(t, tt.expectedSettings.Cline.FileName, settings.Cline.FileName)
+					assert.Equal(t, tt.expectedSettings.App.Header, settings.App.Header)
+					assert.Equal(t, tt.expectedSettings.App.Footer, settings.App.Footer)
+					assert.NotEqual(t, "", settings.App.InputDir)
+					assert.NotEqual(t, "", settings.App.OutputDir)
 
-					for toolName, expectedTool := range tt.expectedSettings.Custom {
-						actualTool, exists := settings.Custom[toolName]
-						assert.True(t, exists, "custom tool %s should exist", toolName)
-						assert.Equal(t, expectedTool.Generate, actualTool.Generate)
-						assert.Equal(t, expectedTool.Path, actualTool.Path)
-						assert.Equal(t, expectedTool.FileName, actualTool.FileName)
+					for name, tool := range tt.expectedSettings.Tools {
+						if tool.Generate {
+							assert.Equal(t, tool.DirName, settings.Tools[name].DirName)
+							assert.Equal(t, tool.FileName, settings.Tools[name].FileName)
+						} else {
+							_, ok := settings.Tools[name]
+							assert.False(t, ok)
+						}
 					}
 				}
 			}
@@ -124,10 +125,10 @@ func TestSettingsDefaultValues(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create minimal settings file without file_name fields
-	settingsContent := `[claude]
+	settingsContent := `[tools.claude]
 generate = true
 
-[cline]
+[tools.cline]
 generate = false`
 
 	settingsPath := filepath.Join(tempDir, "settings.toml")
@@ -137,7 +138,9 @@ generate = false`
 	settings, err := LoadSettings(settingsPath)
 	require.NoError(t, err)
 
-	// Check that default values are applied
-	assert.Equal(t, "CLAUDE.md", settings.Claude.FileName)
-	assert.Equal(t, ".clinerules", settings.Cline.FileName)
+	assert.Equal(t, FileName("CLAUDE.md"), settings.Tools["claude"].FileName)
+	assert.True(t, settings.Tools["claude"].Generate)
+
+	_, ok := settings.Tools["cline"]
+	assert.False(t, ok)
 }

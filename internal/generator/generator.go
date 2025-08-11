@@ -95,40 +95,19 @@ func (g *Generator) WriteOutputFiles(content string) error {
 	// TOML設定を使用
 	var outputs []OutputTarget
 
-	// FIXME: for でループできるようにしたい
-
-	// Claude
-	if g.settings.Claude.Generate {
-		path := g.settings.Claude.Path
-		if path == "" {
-			path = "."
+	for name, tool := range g.settings.Tools {
+		paths := []string{
+			g.settings.App.OutputDir,
 		}
+		if tool.DirName != "" {
+			paths = append(paths, string(tool.DirName))
+		}
+		paths = append(paths, string(tool.FileName))
+
 		outputs = append(outputs, OutputTarget{
-			Path:     filepath.Join(path, g.settings.Claude.FileName),
-			ToolName: "Claude",
+			Path:     filepath.Join(paths...),
+			ToolName: name,
 		})
-	}
-
-	// Cline
-	if g.settings.Cline.Generate {
-		path := g.settings.Cline.Path
-		if path == "" {
-			path = "."
-		}
-		outputs = append(outputs, OutputTarget{
-			Path:     filepath.Join(path, g.settings.Cline.FileName),
-			ToolName: "Cline",
-		})
-	}
-
-	// Custom tools
-	for toolName, settings := range g.settings.Custom {
-		if settings.Generate && settings.Path != "" && settings.FileName != "" {
-			outputs = append(outputs, OutputTarget{
-				Path:     filepath.Join(settings.Path, settings.FileName),
-				ToolName: toolName,
-			})
-		}
 	}
 
 	// ファイル出力
@@ -155,26 +134,17 @@ func (g *Generator) WriteOutputFiles(content string) error {
 
 func (g *Generator) GetGeneratedTargets() []string {
 	var targets []string
-	if g.settings.Claude.Generate {
-		path := g.settings.Claude.Path
-		if path == "" {
-			path = "."
-		}
-		targets = append(targets, filepath.Join(path, g.settings.Claude.FileName))
-	}
 
-	if g.settings.Cline.Generate {
-		path := g.settings.Cline.Path
-		if path == "" {
-			path = "."
+	for _, tool := range g.settings.Tools {
+		paths := []string{
+			g.settings.App.OutputDir,
 		}
-		targets = append(targets, filepath.Join(path, g.settings.Cline.FileName))
-	}
+		if tool.DirName != "" {
+			paths = append(paths, string(tool.DirName))
+		}
+		paths = append(paths, string(tool.FileName))
 
-	for _, settings := range g.settings.Custom {
-		if settings.Generate && settings.Path != "" && settings.FileName != "" {
-			targets = append(targets, filepath.Join(settings.Path, settings.FileName))
-		}
+		targets = append(targets, filepath.Join(paths...))
 	}
 
 	return targets

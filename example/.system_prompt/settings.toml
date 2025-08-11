@@ -2,25 +2,22 @@
 
 # アプリケーション設定
 [app]
-language = ""       # 言語設定: "ja" (日本語), "en" (英語), "" (自動検出)
+language = "" # 言語設定: "ja" (日本語), "en" (英語), "" (自動検出)
 
-[claude]
-generate = true      # false だと生成されない。デフォルトは true
-path = ""           # 未指定の場合はデフォルトの位置に配置される
-file_name = ""      # 未指定の場合は CLAUDE.md になる
+[tools.claude]
+generate = true # false だと生成されない。デフォルトは true
+dir = ""        # 未指定の場合はデフォルトの位置に配置される
+file_name = ""  # 未指定の場合は CLAUDE.md になる
 
-[cline]
+[tools.cline]
 generate = true
-path = ""
-file_name = ""      # 未指定の場合は .clinerules になる
 
 # カスタム設定例
-[custom.cursor]
+[tools.cursor]
 generate = true
-path = "./config"
+dir_name = "config"
 file_name = "cursor_rules.md"
 
-[custom.aider]
+[tools.aider]
 generate = true
-path = "./"
 file_name = ".aider_prompt"

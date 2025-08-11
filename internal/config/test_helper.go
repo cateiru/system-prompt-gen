@@ -26,13 +26,10 @@ func TestSettings(t *testing.T, appSettings ...AppSettings) *Settings {
 		}
 	}
 
-	settings.Claude.Path = outputTmpDir
-	settings.Cline.Path = outputTmpDir
-
-	settings.Custom = map[string]AIToolSettings{
-		"test": {
-			Generate: true,
-			Path:     outputTmpDir,
+	settings.App.OutputDir = outputTmpDir
+	settings.Tools["test"] = AIToolSettings{
+		Generate: true,
+		AIToolPaths: AIToolPaths{
 			FileName: "test.md",
 		},
 	}
