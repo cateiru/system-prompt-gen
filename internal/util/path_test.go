@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestToRelativePath(t *testing.T) {
@@ -110,7 +112,8 @@ func TestToRelativePathWithDotFiles(t *testing.T) {
 
 	// テスト後に元のディレクトリに戻る
 	defer func() {
-		os.Chdir(originalDir)
+		err := os.Chdir(originalDir)
+		require.NoError(t, err)
 	}()
 
 	currentDir, err := os.Getwd()

@@ -203,7 +203,8 @@ func TestWriteOutputFiles_TOMLModeWithEmptyPath(t *testing.T) {
 	require.NoError(t, chdir_err)
 
 	t.Cleanup(func() {
-		os.Chdir(originalWd)
+		err := os.Chdir(originalWd)
+		require.NoError(t, err)
 	})
 
 	settings := &config.Settings{
