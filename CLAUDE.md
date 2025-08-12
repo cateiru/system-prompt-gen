@@ -140,6 +140,9 @@ system-prompt-gen -s /path/to/settings.toml
 # Interactive mode for preview and confirmation
 system-prompt-gen -i
 
+# Non-interactive mode (recommended for automated scripts and CI/CD)
+system-prompt-gen -i=false
+
 # Language setting via command line flag
 system-prompt-gen --language ja
 system-prompt-gen -l en
@@ -151,3 +154,9 @@ LANG=en_US.UTF-8 system-prompt-gen
 # - *.md files (prompt fragments)
 # - settings.toml (optional, tool-specific configuration)
 ```
+
+### Important Usage Notes
+
+- **Use `-i=false` for automation**: When running in automated environments, CI/CD pipelines, or scripts where TTY is not available, always use `-i=false` to avoid TTY-related errors
+- **Example directory**: The `example/` directory contains a complete working setup with exclude patterns demonstration
+- **Test your configuration**: Run `cd example && ../.bin/system-prompt-gen -i=false` to see exclude patterns in action
