@@ -30,6 +30,31 @@ make build
 
 ## 使用方法
 
+### 出力ファイル形式
+
+生成されるファイルは以下の形式に従います：
+```markdown
+[settings.tomlのヘッダー内容]
+# ファイル名（拡張子なし）
+
+ファイル内容...
+
+# 別のファイル名
+
+別のファイル内容...
+
+[settings.tomlのフッター内容]
+```
+
+例えば、`01-base.md` と `02-coding.md` ファイルがある場合、出力は以下のようになります：
+```markdown
+# 01-base
+[01-base.mdの内容]
+
+# 02-coding
+[02-coding.mdの内容]
+```
+
 ### 基本的な使用方法
 
 ```bash
@@ -39,8 +64,11 @@ system-prompt-gen
 # 設定ファイルの場所を指定
 system-prompt-gen -s /path/to/settings.toml
 
-# インタラクティブモードで実行
+# インタラクティブモードで実行（デフォルト: true）
 system-prompt-gen -i
+
+# 非インタラクティブモードで実行（自動化/CI用）
+system-prompt-gen -i=false
 
 # 言語を指定
 system-prompt-gen --language ja
@@ -76,7 +104,7 @@ footer = "カスタムフッター内容"    # 全生成ファイルに追加す
 generate = true       # 生成を無効にするにはfalseに設定、デフォルトはtrue
 dir_name = ""         # ディレクトリ名（空文字列 = カレントディレクトリ）
 file_name = ""        # ファイル名（空文字列 = デフォルト: "CLAUDE.md"）
-include = ["001_*.md", "002_*.md"]  # 特定パターンのみ包含（オプション、未定義なら全て包含）
+include = ["01-*.md", "02-*.md"]  # 特定パターンのみ包含（オプション、未定義なら全て包含）
 exclude = ["003_*.md", "temp*.md"]  # ファイル除外パターン（excludeがincludeより優先）
 
 [tools.cline]
@@ -84,14 +112,20 @@ generate = true
 dir_name = ""
 file_name = ""        # デフォルトは".clinerules"
 include = ["*"]       # 全ファイルを包含（明示的指定）
-exclude = ["001_*.md"]              # ツール固有の除外パターン
+exclude = ["01-*.md"]              # ツール固有の除外パターン
 
 [tools.github_copilot]
 generate = false      # GitHub Copilot用のビルトインサポート
 dir_name = ".github"  # デフォルト: .github/copilot-instructions.md
 file_name = "copilot-instructions.md"
 
-[tools.custom_tool]   # カスタムAIツールの追加
+[tools.aider]        # カスタムツール例: Aider AIコーディングアシスタント
+generate = true
+dir_name = ""         # カレントディレクトリ（カスタムツールに必須）
+file_name = ".aider_prompt"  # カスタムツールに必須
+include = ["01-*.md", "02-*.md"]  # 基本設定ファイルのみ包含
+
+[tools.custom_tool]   # その他のカスタムAIツール
 generate = true
 dir_name = "./custom" # カスタムツールには必須
 file_name = "custom.md"  # カスタムツールには必須
@@ -108,7 +142,7 @@ exclude = ["private*.md"]           # 機密ファイルをカスタムツール
 - 未定義の場合、デフォルトで全ファイルが包含される
 - シェル形式のglobパターンを使用（`*`、`?`、`[...]`）
 - パターンは `.system_prompt/` ディレクトリからの相対パスに対してマッチ
-- 一般的なパターン例：`"001_*.md"`、`"public_*.md"`、`"*"`（全ファイル）
+- 一般的なパターン例：`"01-*.md"`、`"public_*.md"`、`"*"`（全ファイル）
 
 #### 除外パターン (Exclude)
 - `exclude = ["pattern1", "pattern2"]` - これらのパターンに該当するファイルを除外
@@ -174,10 +208,14 @@ make install
 
 ## サポートするAIツール
 
+### ビルトインツール
 - **Claude** - Anthropic Claude用プロンプトファイル
 - **Cline** - VS Code拡張のCline用ルールファイル
 - **GitHub Copilot** - GitHub Copilot用指示ファイル
-- **カスタムツール** - 任意のAIツール用カスタムファイル
+
+### カスタムツール
+- **任意AIツール** - `dir_name` と `file_name` 設定でカスタムツールを定義
+- **例**: Aider、Cursor、その他のAIツールをカスタムツールとして設定可能
 
 ## ライセンス
 

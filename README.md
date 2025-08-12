@@ -30,6 +30,31 @@ make build
 
 ## Usage
 
+### Output File Format
+
+Generated files follow this format:
+```markdown
+[Header content from settings.toml]
+# filename-without-extension
+
+File content here...
+
+# another-filename
+
+Another file content...
+
+[Footer content from settings.toml]
+```
+
+For example, if you have `01-base.md` and `02-coding.md` files, the output will contain:
+```markdown
+# 01-base
+[Content of 01-base.md]
+
+# 02-coding
+[Content of 02-coding.md]
+```
+
 ### Basic Usage
 
 ```bash
@@ -39,8 +64,11 @@ system-prompt-gen
 # Specify custom settings file location
 system-prompt-gen -s /path/to/settings.toml
 
-# Run in interactive mode
+# Run in interactive mode (default: true)
 system-prompt-gen -i
+
+# Run in non-interactive mode (for automation/CI)
+system-prompt-gen -i=false
 
 # Specify language
 system-prompt-gen --language ja
@@ -76,7 +104,7 @@ footer = "Custom footer content"    # Optional footer for all generated files
 generate = true       # Set to false to disable generation, default is true
 dir_name = ""         # Directory name (empty = current directory)
 file_name = ""        # File name (empty = default: "CLAUDE.md")
-include = ["001_*.md", "002_*.md"]  # Include only specific patterns (optional, undefined = include all)
+include = ["01-*.md", "02-*.md"]  # Include only specific patterns (optional, undefined = include all)
 exclude = ["003_*.md", "temp*.md"]  # Exclude patterns for files (exclude takes priority over include)
 
 [tools.cline]
@@ -84,14 +112,20 @@ generate = true
 dir_name = ""
 file_name = ""        # Defaults to ".clinerules"
 include = ["*"]       # Include all files (explicit specification)
-exclude = ["001_*.md"]              # Tool-specific exclude patterns
+exclude = ["01-*.md"]              # Tool-specific exclude patterns
 
 [tools.github_copilot]
 generate = false      # Built-in support for GitHub Copilot instructions
 dir_name = ".github"  # Default: .github/copilot-instructions.md
 file_name = "copilot-instructions.md"
 
-[tools.custom_tool]   # Add custom AI tools
+[tools.aider]        # Custom tool example: Aider AI coding assistant
+generate = true
+dir_name = ""         # Current directory (required for custom tools)
+file_name = ".aider_prompt"  # Required for custom tools
+include = ["01-*.md", "02-*.md"]  # Include only basic setup files
+
+[tools.custom_tool]   # Add other custom AI tools
 generate = true
 dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
@@ -108,7 +142,7 @@ Each tool can define `include` and `exclude` patterns to filter files from `.sys
 - If undefined, all files are included by default
 - Uses shell-style glob patterns (`*`, `?`, `[...]`)
 - Patterns are matched against relative paths from `.system_prompt/` directory
-- Common patterns: `"001_*.md"`, `"public_*.md"`, `"*"` (all files)
+- Common patterns: `"01-*.md"`, `"public_*.md"`, `"*"` (all files)
 
 #### Exclude Patterns  
 - `exclude = ["pattern1", "pattern2"]` - Exclude files matching these patterns
@@ -174,10 +208,14 @@ Primarily uses TOML-based configuration:
 
 ## Supported AI Tools
 
+### Built-in Tools
 - **Claude** - Prompt files for Anthropic Claude
-- **Cline** - Rule files for Cline VS Code extension
+- **Cline** - Rule files for Cline VS Code extension  
 - **GitHub Copilot** - Instruction files for GitHub Copilot
-- **Custom Tools** - Custom files for any AI tool
+
+### Custom Tools
+- **Any AI Tool** - Define custom tools with `dir_name` and `file_name` settings
+- **Example**: Aider, Cursor, or any other AI tool can be configured as custom tools
 
 ## License
 

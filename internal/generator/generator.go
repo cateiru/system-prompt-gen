@@ -104,7 +104,7 @@ func (g *Generator) CollectPromptFilesForTool(toolName string, toolSettings conf
 				}
 			}
 
-			// Exclude パターンのチェック（Include より優先）
+			// Exclude パターンのチェック（結果的にExcludeが優先される）
 			for _, pattern := range toolSettings.Exclude {
 				if matched, _ := filepath.Match(pattern, relPath); matched {
 					return nil

@@ -21,6 +21,18 @@ test-unit:
 	@which tparse > /dev/null || (echo "tparseがインストールされていません。'go install github.com/mfridman/tparse@latest'を実行してください" && exit 1)
 	@set -o pipefail && go test -json ./... | tparse
 
+# Run tests with coverage report
+test-coverage:
+	@which tparse > /dev/null || (echo "tparseがインストールされていません。'go install github.com/mfridman/tparse@latest'を実行してください" && exit 1)
+	@set -o pipefail && go test -json -coverprofile=coverage.out ./... | tparse
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "カバレッジレポートが coverage.html に生成されました"
+
+# Run tests with race detection
+test-verbose:
+	@which tparse > /dev/null || (echo "tparseがインストールされていません。'go install github.com/mfridman/tparse@latest'を実行してください" && exit 1)
+	@set -o pipefail && go test -json -race -v ./... | tparse
+
 
 # Run integration test with example
 test: build
