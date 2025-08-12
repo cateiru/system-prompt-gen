@@ -130,6 +130,63 @@ exclude = ["private*.md"]`,
 			},
 			expectError: false,
 		},
+		{
+			name: "settings with include patterns",
+			settingsContent: `[app]
+header = "header"
+footer = "footer"
+
+[tools.claude]
+generate = true
+include = ["001_*.md", "002_*.md"]
+
+[tools.cline]
+generate = true
+include = ["*"]
+exclude = ["003_*.md"]
+
+[tools.mytool]
+generate = true
+dir_name = "tools"
+file_name = "mytool.md"
+include = ["public*.md", "common*.md"]
+exclude = ["public_secret*.md"]`,
+			expectedSettings: &Settings{
+				App: AppSettings{
+					Header: "header",
+					Footer: "footer",
+				},
+				Tools: map[string]AIToolSettings{
+					"claude": {
+						Generate: true,
+						Include:  []string{"001_*.md", "002_*.md"},
+						AIToolPaths: AIToolPaths{
+							DirName:  "",
+							FileName: "CLAUDE.md",
+						},
+					},
+					"cline": {
+						Generate: true,
+						Include:  []string{"*"},
+						Exclude:  []string{"003_*.md"},
+						AIToolPaths: AIToolPaths{
+							DirName:  "",
+							FileName: ".clinerules",
+						},
+					},
+					"mytool": {
+						Generate: true,
+						Include:  []string{"public*.md", "common*.md"},
+						Exclude:  []string{"public_secret*.md"},
+						AIToolPaths: AIToolPaths{
+							DirName:  "tools",
+							FileName: "mytool.md",
+						},
+					},
+				},
+			},
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -161,6 +218,7 @@ exclude = ["private*.md"]`,
 						if tool.Generate {
 							assert.Equal(t, tool.DirName, settings.Tools[name].DirName)
 							assert.Equal(t, tool.FileName, settings.Tools[name].FileName)
+							assert.Equal(t, tool.Include, settings.Tools[name].Include)
 							assert.Equal(t, tool.Exclude, settings.Tools[name].Exclude)
 						} else {
 							_, ok := settings.Tools[name]

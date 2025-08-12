@@ -13,6 +13,7 @@ type DirName string
 
 type AIToolSettings struct {
 	Generate bool     `toml:"generate"`
+	Include  []string `toml:"include"`
 	Exclude  []string `toml:"exclude"`
 	AIToolPaths
 }
@@ -119,6 +120,7 @@ func LoadSettings(settingsPath string) (*Settings, error) {
 
 			newTools[name] = AIToolSettings{
 				Generate: true,
+				Include:  tool.Include,
 				Exclude:  tool.Exclude,
 				AIToolPaths: AIToolPaths{
 					DirName:  dirName,

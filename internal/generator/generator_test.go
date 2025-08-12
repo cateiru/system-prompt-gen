@@ -423,6 +423,122 @@ func TestCollectPromptFilesForTool(t *testing.T) {
 	}
 }
 
+func TestCollectPromptFilesForToolWithInclude(t *testing.T) {
+	i18n.TestSetupI18n(t)
+
+	settings := config.TestSettings(t)
+
+	// Create test files
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "001_first.md"), "# First\nContent of first file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "002_second.md"), "# Second\nContent of second file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "003_third.md"), "# Third\nContent of third file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "public_doc.md"), "# Public\nPublic documentation\n")
+
+	gen := New(settings)
+
+	// Test tool with include patterns
+	toolSettings := config.AIToolSettings{
+		Generate: true,
+		Include:  []string{"001_*.md", "002_*.md"},
+		AIToolPaths: config.AIToolPaths{
+			FileName: "tool.md",
+		},
+	}
+
+	files, err := gen.CollectPromptFilesForTool("test_tool", toolSettings)
+
+	require.NoError(t, err)
+	assert.Len(t, files, 2) // Should find 2 .md files matching include patterns
+
+	// Check files are sorted by filename and only included files are present
+	fileNames := []string{"001_first.md", "002_second.md"}
+	for i, file := range files {
+		assert.Equal(t, fileNames[i], file.Filename)
+		assert.NotEmpty(t, file.Content)
+		assert.NotEmpty(t, file.Path)
+	}
+
+	// Verify non-included files are not present
+	for _, file := range files {
+		assert.NotEqual(t, "003_third.md", file.Filename)
+		assert.NotEqual(t, "public_doc.md", file.Filename)
+	}
+}
+
+func TestCollectPromptFilesForToolWithIncludeAndExclude(t *testing.T) {
+	i18n.TestSetupI18n(t)
+
+	settings := config.TestSettings(t)
+
+	// Create test files
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "public_doc.md"), "# Public\nPublic documentation\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "public_secret.md"), "# Secret\nSecret information\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "private_doc.md"), "# Private\nPrivate documentation\n")
+
+	gen := New(settings)
+
+	// Test tool with both include and exclude patterns
+	// Include all public_*.md files but exclude public_secret.md
+	toolSettings := config.AIToolSettings{
+		Generate: true,
+		Include:  []string{"public_*.md"},
+		Exclude:  []string{"public_secret.md"},
+		AIToolPaths: config.AIToolPaths{
+			FileName: "tool.md",
+		},
+	}
+
+	files, err := gen.CollectPromptFilesForTool("test_tool", toolSettings)
+
+	require.NoError(t, err)
+	assert.Len(t, files, 1) // Should find only public_doc.md
+
+	// Check correct file is included
+	assert.Equal(t, "public_doc.md", files[0].Filename)
+	assert.Contains(t, files[0].Content, "Public documentation")
+
+	// Verify excluded and non-included files are not present
+	for _, file := range files {
+		assert.NotEqual(t, "public_secret.md", file.Filename)
+		assert.NotEqual(t, "private_doc.md", file.Filename)
+	}
+}
+
+func TestCollectPromptFilesForToolIncludeUndefined(t *testing.T) {
+	i18n.TestSetupI18n(t)
+
+	settings := config.TestSettings(t)
+
+	// Create test files
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "001_first.md"), "# First\nContent of first file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "002_second.md"), "# Second\nContent of second file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "003_third.md"), "# Third\nContent of third file\n")
+
+	gen := New(settings)
+
+	// Test tool without include patterns (should include all files)
+	toolSettings := config.AIToolSettings{
+		Generate: true,
+		Include:  []string{}, // Empty include patterns
+		AIToolPaths: config.AIToolPaths{
+			FileName: "tool.md",
+		},
+	}
+
+	files, err := gen.CollectPromptFilesForTool("test_tool", toolSettings)
+
+	require.NoError(t, err)
+	assert.Len(t, files, 3) // Should find all .md files
+
+	// Check files are sorted by filename
+	fileNames := []string{"001_first.md", "002_second.md", "003_third.md"}
+	for i, file := range files {
+		assert.Equal(t, fileNames[i], file.Filename)
+		assert.NotEmpty(t, file.Content)
+		assert.NotEmpty(t, file.Path)
+	}
+}
+
 func TestCollectPromptFilesForToolNoExclude(t *testing.T) {
 	i18n.TestSetupI18n(t)
 

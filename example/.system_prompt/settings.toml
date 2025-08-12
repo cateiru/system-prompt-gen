@@ -8,10 +8,12 @@ header = "This is Header!"
 generate = true # false だと生成されない。デフォルトは true
 dir_name = ""   # 未指定の場合はデフォルトの位置に配置される
 file_name = ""  # 未指定の場合は CLAUDE.md になる
+# include = ["001_*.md", "002_*.md"]  # 特定のファイルのみを含める（未定義なら全て含める）
 exclude = ["003_*.md", "temp*.md", "draft_*.md"]  # 機密情報、一時ファイル、ドラフトを除外
 
 [tools.cline]
 generate = true
+# include = ["*"]  # 全ファイルを含める（明示的指定）
 exclude = ["draft_*.md"]  # ドラフトファイルを除外
 
 # カスタム設定例
@@ -19,10 +21,12 @@ exclude = ["draft_*.md"]  # ドラフトファイルを除外
 generate = true
 dir_name = "config"
 file_name = "cursor_rules.md"
+# include = ["public_*.md", "common_*.md"]  # 公開用とコモンファイルのみ含める
 exclude = ["003_*.md", "temp*.md", "draft_*.md"]  # 複数パターンで除外
 
 [tools.aider]
 generate = true
 dir_name = ""
 file_name = ".aider_prompt"
-# exclude なし - 全ファイルを含める
+include = ["01-*.md", "02-*.md"]  # 基本設定ファイルのみ含める例
+# exclude なし - includeで指定したファイルを含める

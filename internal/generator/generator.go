@@ -90,6 +90,21 @@ func (g *Generator) CollectPromptFilesForTool(toolName string, toolSettings conf
 				return err
 			}
 
+			// Include パターンのチェック（未定義の場合は全てを含める）
+			if len(toolSettings.Include) > 0 {
+				includeMatched := false
+				for _, pattern := range toolSettings.Include {
+					if matched, _ := filepath.Match(pattern, relPath); matched {
+						includeMatched = true
+						break
+					}
+				}
+				if !includeMatched {
+					return nil
+				}
+			}
+
+			// Exclude パターンのチェック（Include より優先）
 			for _, pattern := range toolSettings.Exclude {
 				if matched, _ := filepath.Match(pattern, relPath); matched {
 					return nil
