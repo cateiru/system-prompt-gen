@@ -8,17 +8,21 @@ header = "This is Header!"
 generate = true # false だと生成されない。デフォルトは true
 dir_name = ""   # 未指定の場合はデフォルトの位置に配置される
 file_name = ""  # 未指定の場合は CLAUDE.md になる
+exclude = ["003_*.md", "temp*.md", "draft_*.md"]  # 機密情報、一時ファイル、ドラフトを除外
 
 [tools.cline]
 generate = true
+exclude = ["draft_*.md"]  # ドラフトファイルを除外
 
 # カスタム設定例
 [tools.cursor]
 generate = true
 dir_name = "config"
 file_name = "cursor_rules.md"
+exclude = ["003_*.md", "temp*.md", "draft_*.md"]  # 複数パターンで除外
 
 [tools.aider]
 generate = true
 dir_name = ""
 file_name = ".aider_prompt"
+# exclude なし - 全ファイルを含める
