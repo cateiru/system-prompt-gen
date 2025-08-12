@@ -11,7 +11,7 @@
 - 🌍 完全な国際化サポート（日本語・英語）
 - ⚙️ TOML設定ファイルによる柔軟な設定管理
 - 🔧 カスタムAIツールへの対応
-- 🚫 ツール別ファイル除外パターン機能
+- 🚫🔍 ツール別ファイル包含/除外パターン機能
 - 🎨 Bubble Teaを使用した美しいTUI
 
 ## インストール
@@ -76,12 +76,14 @@ footer = "カスタムフッター内容"    # 全生成ファイルに追加す
 generate = true       # 生成を無効にするにはfalseに設定、デフォルトはtrue
 dir_name = ""         # ディレクトリ名（空文字列 = カレントディレクトリ）
 file_name = ""        # ファイル名（空文字列 = デフォルト: "CLAUDE.md"）
-exclude = ["003_*.md", "temp*.md"]  # ファイル除外パターン（オプション）
+include = ["001_*.md", "002_*.md"]  # 特定パターンのみ包含（オプション、未定義なら全て包含）
+exclude = ["003_*.md", "temp*.md"]  # ファイル除外パターン（excludeがincludeより優先）
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # デフォルトは".clinerules"
+include = ["*"]       # 全ファイルを包含（明示的指定）
 exclude = ["001_*.md"]              # ツール固有の除外パターン
 
 [tools.github_copilot]
@@ -93,16 +95,32 @@ file_name = "copilot-instructions.md"
 generate = true
 dir_name = "./custom" # カスタムツールには必須
 file_name = "custom.md"  # カスタムツールには必須
+include = ["public_*.md", "common_*.md"]  # 公開ファイルと共通ファイルのみ包含
 exclude = ["private*.md"]           # 機密ファイルをカスタムツールから除外
 ```
 
-### 除外パターン
+### 包含/除外パターン
 
-各ツールは `.system_prompt/` から特定のファイルを除外する `exclude` パターンを定義できます：
+各ツールは `.system_prompt/` からファイルをフィルタリングする `include` と `exclude` パターンを定義できます：
+
+#### 包含パターン (Include)
+- `include = ["pattern1", "pattern2"]` - これらのパターンに該当するファイルのみを包含
+- 未定義の場合、デフォルトで全ファイルが包含される
 - シェル形式のglobパターンを使用（`*`、`?`、`[...]`）
 - パターンは `.system_prompt/` ディレクトリからの相対パスに対してマッチ
+- 一般的なパターン例：`"001_*.md"`、`"public_*.md"`、`"*"`（全ファイル）
+
+#### 除外パターン (Exclude)
+- `exclude = ["pattern1", "pattern2"]` - これらのパターンに該当するファイルを除外
+- **除外が優先** - includeとexclude両方に該当するファイルは除外される
+- シェル形式のglobパターンを使用（`*`、`?`、`[...]`）
 - 一般的なパターン例：`"003_*.md"`、`"temp*.md"`、`"private*.md"`、`"draft_*.md"`
-- 各ツールは除外パターンに該当しないファイルのみを処理
+
+#### 処理順序
+1. `include` が定義されている場合、includeパターンに該当するファイルのみが考慮される
+2. `include` が未定義の場合、全ファイルが考慮される
+3. `exclude` パターンに該当するファイルが除去される（excludeが優先）
+4. 各ツールは残ったファイルのみを処理
 
 ## 開発
 
@@ -141,7 +159,7 @@ make install
 
 `internal/generator/generator.go` がコアワークフローを制御：
 
-1. 有効な各ツールに対して、`.system_prompt/*.md` ファイルを収集（ツール固有の除外パターンを適用）
+1. 有効な各ツールに対して、`.system_prompt/*.md` ファイルを収集（ツール固有の包含/除外パターンを適用）
 2. ファイル名のアルファベット順でソート
 3. 設定されたヘッダー・フッターとコンテンツをマージ
 4. TOML設定に基づいてツール固有の出力ファイルを生成

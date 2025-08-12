@@ -11,7 +11,7 @@ A Go CLI tool that aggregates multiple AI system prompt files from `.system_prom
 - 🌍 Full internationalization support (Japanese & English)
 - ⚙️ Flexible configuration management with TOML configuration files
 - 🔧 Support for custom AI tools
-- 🚫 Tool-specific file exclusion patterns
+- 🚫🔍 Tool-specific include/exclude file patterns
 - 🎨 Beautiful TUI using Bubble Tea
 
 ## Installation
@@ -76,12 +76,14 @@ footer = "Custom footer content"    # Optional footer for all generated files
 generate = true       # Set to false to disable generation, default is true
 dir_name = ""         # Directory name (empty = current directory)
 file_name = ""        # File name (empty = default: "CLAUDE.md")
-exclude = ["003_*.md", "temp*.md"]  # Exclude patterns for files (optional)
+include = ["001_*.md", "002_*.md"]  # Include only specific patterns (optional, undefined = include all)
+exclude = ["003_*.md", "temp*.md"]  # Exclude patterns for files (exclude takes priority over include)
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # Defaults to ".clinerules"
+include = ["*"]       # Include all files (explicit specification)
 exclude = ["001_*.md"]              # Tool-specific exclude patterns
 
 [tools.github_copilot]
@@ -93,16 +95,32 @@ file_name = "copilot-instructions.md"
 generate = true
 dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
+include = ["public_*.md", "common_*.md"]  # Include only public and common files
 exclude = ["private*.md"]           # Exclude sensitive files from custom tools
 ```
 
-### Exclude Patterns
+### Include/Exclude Patterns
 
-Each tool can define `exclude` patterns to filter out specific files from `.system_prompt/`:
+Each tool can define `include` and `exclude` patterns to filter files from `.system_prompt/`:
+
+#### Include Patterns
+- `include = ["pattern1", "pattern2"]` - Include only files matching these patterns
+- If undefined, all files are included by default
 - Uses shell-style glob patterns (`*`, `?`, `[...]`)
-- Patterns are matched against relative paths from `.system_prompt/` directory  
+- Patterns are matched against relative paths from `.system_prompt/` directory
+- Common patterns: `"001_*.md"`, `"public_*.md"`, `"*"` (all files)
+
+#### Exclude Patterns  
+- `exclude = ["pattern1", "pattern2"]` - Exclude files matching these patterns
+- **Exclude takes priority** - files matching both include and exclude patterns are excluded
+- Uses shell-style glob patterns (`*`, `?`, `[...]`)
 - Common patterns: `"003_*.md"`, `"temp*.md"`, `"private*.md"`, `"draft_*.md"`
-- Each tool processes only the files not excluded by its patterns
+
+#### Processing Order
+1. If `include` is defined, only files matching include patterns are considered
+2. If `include` is undefined, all files are considered
+3. Files matching `exclude` patterns are then removed (exclude takes priority)
+4. Each tool processes only the remaining files
 
 ## Development
 
@@ -141,7 +159,7 @@ Primarily uses TOML-based configuration:
 
 `internal/generator/generator.go` controls the core workflow:
 
-1. For each enabled tool, collect `.system_prompt/*.md` files (applying tool-specific exclusion patterns)
+1. For each enabled tool, collect `.system_prompt/*.md` files (applying tool-specific include/exclude patterns)
 2. Sort files alphabetically by filename
 3. Merge configured headers/footers with content
 4. Generate tool-specific output files based on TOML configuration
