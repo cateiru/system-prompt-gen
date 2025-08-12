@@ -42,15 +42,20 @@ The TOML system is the preferred and actively developed configuration method.
 Key types in `internal/config/config.go`:
 - `Config`: Main configuration with backward compatibility
 - `Settings`: TOML-based tool-specific settings
-- `AIToolSettings`: Individual tool settings (generate flags, paths, filenames)
-- `AppSettings`: Application-level settings (language preferences)
+- `AIToolSettings`: Individual tool settings (generate flags, paths, filenames, exclude patterns)
+- `AppSettings`: Application-level settings (headers, footers, directories)
 
 ### Generator Processing Flow
 `internal/generator/generator.go` controls the core workflow:
-1. Scan `.system_prompt/*.md` files (applying exclusion patterns from config)
+1. For each enabled tool, collect `.system_prompt/*.md` files (applying tool-specific exclusion patterns)
 2. Sort files alphabetically by filename
 3. Merge configured headers/footers with content
-4. Output to multiple targets based on TOML configuration
+4. Generate tool-specific output files based on TOML configuration
+
+Key functions:
+- `CollectPromptFiles()`: Collects all `.md` files (legacy function)
+- `CollectPromptFilesForTool()`: Collects files for specific tool with exclude patterns applied
+- `WriteOutputFilesWithExcludes()`: Main output function that processes each tool independently
 
 ### Configuration Loading Priority
 The system loads configuration in this order:
@@ -88,17 +93,20 @@ Place `.system_prompt/settings.toml` in your working directory:
 ```toml
 # Application settings
 [app]
-# Language setting is now specified with --language (-l) flag
+header = "Custom header content"    # Optional header for all generated files
+footer = "Custom footer content"    # Optional footer for all generated files
 
 [tools.claude]
 generate = true       # Set to false to disable generation, default is true
 dir_name = ""         # Directory name (empty = current directory)
 file_name = ""        # File name (empty = default: "CLAUDE.md")
+exclude = ["003_*.md", "temp*.md"]  # Exclude patterns for files (optional)
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # Defaults to ".clinerules"
+exclude = ["001_*.md"]              # Tool-specific exclude patterns
 
 [tools.github_copilot]
 generate = false      # Built-in support for GitHub Copilot instructions
@@ -109,7 +117,16 @@ file_name = "copilot-instructions.md"
 generate = true
 dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
+exclude = ["private*.md"]           # Exclude sensitive files from custom tools
 ```
+
+### Exclude Patterns
+
+Each tool can define `exclude` patterns to filter out specific files from `.system_prompt/`:
+- Uses `filepath.Match` for pattern matching (shell-style patterns)
+- Patterns are matched against relative paths from `.system_prompt/` directory
+- Common patterns: `"003_*.md"`, `"temp*.md"`, `"private*.md"`, `"draft_*.md"`
+- Each tool processes only the files not excluded by its patterns
 
 ## CLI Usage Patterns
 

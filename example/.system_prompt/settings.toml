@@ -2,7 +2,7 @@
 
 # アプリケーション設定
 [app]
-# 言語設定は --language (-l) フラグで指定してください
+header = "This is Header!"
 
 [tools.claude]
 generate = true # false だと生成されない。デフォルトは true

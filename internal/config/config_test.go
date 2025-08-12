@@ -77,6 +77,59 @@ file_name = "mytool.md"`,
 			settingsContent: `[invalid toml`,
 			expectError:     true,
 		},
+		{
+			name: "settings with exclude patterns",
+			settingsContent: `[app]
+header = "header"
+footer = "footer"
+
+[tools.claude]
+generate = true
+exclude = ["003_*.md", "temp*.md"]
+
+[tools.cline]
+generate = true
+exclude = ["001_*.md"]
+
+[tools.mytool]
+generate = true
+dir_name = "tools"
+file_name = "mytool.md"
+exclude = ["private*.md"]`,
+			expectedSettings: &Settings{
+				App: AppSettings{
+					Header: "header",
+					Footer: "footer",
+				},
+				Tools: map[string]AIToolSettings{
+					"claude": {
+						Generate: true,
+						Exclude:  []string{"003_*.md", "temp*.md"},
+						AIToolPaths: AIToolPaths{
+							DirName:  "",
+							FileName: "CLAUDE.md",
+						},
+					},
+					"cline": {
+						Generate: true,
+						Exclude:  []string{"001_*.md"},
+						AIToolPaths: AIToolPaths{
+							DirName:  "",
+							FileName: ".clinerules",
+						},
+					},
+					"mytool": {
+						Generate: true,
+						Exclude:  []string{"private*.md"},
+						AIToolPaths: AIToolPaths{
+							DirName:  "tools",
+							FileName: "mytool.md",
+						},
+					},
+				},
+			},
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -108,6 +161,7 @@ file_name = "mytool.md"`,
 						if tool.Generate {
 							assert.Equal(t, tool.DirName, settings.Tools[name].DirName)
 							assert.Equal(t, tool.FileName, settings.Tools[name].FileName)
+							assert.Equal(t, tool.Exclude, settings.Tools[name].Exclude)
 						} else {
 							_, ok := settings.Tools[name]
 							assert.False(t, ok)

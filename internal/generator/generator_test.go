@@ -376,3 +376,141 @@ func TestWriteOutputFiles_DirectoryCreation(t *testing.T) {
 	actualContent := testutil.ReadTestFile(t, outputFile)
 	assert.Equal(t, content, actualContent)
 }
+
+func TestCollectPromptFilesForTool(t *testing.T) {
+	i18n.TestSetupI18n(t)
+
+	settings := config.TestSettings(t)
+
+	// Create test files
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "01_first.md"), "# First\nContent of first file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "02_second.md"), "# Second\nContent of second file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "003_excluded.md"), "# Excluded\nThis should be excluded\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "temp_file.md"), "# Temp\nTemporary file\n")
+
+	gen := New(settings)
+
+	// Test tool with exclude patterns
+	toolSettings := config.AIToolSettings{
+		Generate: true,
+		Exclude:  []string{"003_*.md", "temp*.md"},
+		AIToolPaths: config.AIToolPaths{
+			FileName: "tool.md",
+		},
+	}
+
+	files, err := gen.CollectPromptFilesForTool("test_tool", toolSettings)
+
+	require.NoError(t, err)
+	assert.Len(t, files, 2) // Should find 2 .md files (excluding the patterns)
+
+	// Check files are sorted by filename and excluded files are not present
+	fileNames := []string{"01_first.md", "02_second.md"}
+	for i, file := range files {
+		assert.Equal(t, fileNames[i], file.Filename)
+		assert.NotEmpty(t, file.Content)
+		assert.NotEmpty(t, file.Path)
+	}
+
+	// Check specific content
+	assert.Contains(t, files[0].Content, "Content of first file")
+	assert.Contains(t, files[1].Content, "Content of second file")
+
+	// Verify excluded files are not present
+	for _, file := range files {
+		assert.NotEqual(t, "003_excluded.md", file.Filename)
+		assert.NotEqual(t, "temp_file.md", file.Filename)
+	}
+}
+
+func TestCollectPromptFilesForToolNoExclude(t *testing.T) {
+	i18n.TestSetupI18n(t)
+
+	settings := config.TestSettings(t)
+
+	// Create test files
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "01_first.md"), "# First\nContent of first file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "02_second.md"), "# Second\nContent of second file\n")
+
+	gen := New(settings)
+
+	// Test tool without exclude patterns
+	toolSettings := config.AIToolSettings{
+		Generate: true,
+		Exclude:  []string{}, // No exclude patterns
+		AIToolPaths: config.AIToolPaths{
+			FileName: "tool.md",
+		},
+	}
+
+	files, err := gen.CollectPromptFilesForTool("test_tool", toolSettings)
+
+	require.NoError(t, err)
+	assert.Len(t, files, 2) // Should find all .md files
+
+	// Check files are sorted by filename
+	fileNames := []string{"01_first.md", "02_second.md"}
+	for i, file := range files {
+		assert.Equal(t, fileNames[i], file.Filename)
+		assert.NotEmpty(t, file.Content)
+		assert.NotEmpty(t, file.Path)
+	}
+}
+
+func TestWriteOutputFilesWithExcludes(t *testing.T) {
+	i18n.TestSetupI18n(t)
+
+	tempDir := t.TempDir()
+
+	settings := &config.Settings{
+		App: config.AppSettings{
+			InputDir:  filepath.Join(tempDir, "input"),
+			OutputDir: tempDir,
+		},
+		Tools: map[string]config.AIToolSettings{
+			"claude": config.AIToolSettings{
+				Generate: true,
+				Exclude:  []string{"003_*.md"},
+				AIToolPaths: config.AIToolPaths{
+					FileName: "CLAUDE.md",
+				},
+			},
+			"cline": config.AIToolSettings{
+				Generate: true,
+				Exclude:  []string{"001_*.md"},
+				AIToolPaths: config.AIToolPaths{
+					FileName: ".clinerules",
+				},
+			},
+		},
+	}
+
+	// Create input directory and files
+	err := os.MkdirAll(settings.App.InputDir, 0755)
+	require.NoError(t, err)
+
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "001_first.md"), "# First\nContent of first file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "002_second.md"), "# Second\nContent of second file\n")
+	testutil.CreateTestFile(t, filepath.Join(settings.App.InputDir, "003_third.md"), "# Third\nContent of third file\n")
+
+	gen := New(settings)
+
+	err = gen.WriteOutputFilesWithExcludes()
+	require.NoError(t, err)
+
+	// Check Claude file (should exclude 003_*.md)
+	claudeFile := filepath.Join(tempDir, "CLAUDE.md")
+	testutil.AssertFileExists(t, claudeFile)
+	claudeContent := testutil.ReadTestFile(t, claudeFile)
+	assert.Contains(t, claudeContent, "Content of first file")
+	assert.Contains(t, claudeContent, "Content of second file")
+	assert.NotContains(t, claudeContent, "Content of third file")
+
+	// Check Cline file (should exclude 001_*.md)
+	clineFile := filepath.Join(tempDir, ".clinerules")
+	testutil.AssertFileExists(t, clineFile)
+	clineContent := testutil.ReadTestFile(t, clineFile)
+	assert.NotContains(t, clineContent, "Content of first file")
+	assert.Contains(t, clineContent, "Content of second file")
+	assert.Contains(t, clineContent, "Content of third file")
+}

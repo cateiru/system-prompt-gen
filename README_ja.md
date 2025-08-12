@@ -11,6 +11,7 @@
 - 🌍 完全な国際化サポート（日本語・英語）
 - ⚙️ TOML設定ファイルによる柔軟な設定管理
 - 🔧 カスタムAIツールへの対応
+- 🚫 ツール別ファイル除外パターン機能
 - 🎨 Bubble Teaを使用した美しいTUI
 
 ## インストール
@@ -68,17 +69,20 @@ your-project/
 ```toml
 # アプリケーション設定
 [app]
-# 言語設定は --language (-l) フラグで指定
+header = "カスタムヘッダー内容"    # 全生成ファイルに追加するヘッダー（オプション）
+footer = "カスタムフッター内容"    # 全生成ファイルに追加するフッター（オプション）
 
 [tools.claude]
 generate = true       # 生成を無効にするにはfalseに設定、デフォルトはtrue
 dir_name = ""         # ディレクトリ名（空文字列 = カレントディレクトリ）
 file_name = ""        # ファイル名（空文字列 = デフォルト: "CLAUDE.md"）
+exclude = ["003_*.md", "temp*.md"]  # ファイル除外パターン（オプション）
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # デフォルトは".clinerules"
+exclude = ["001_*.md"]              # ツール固有の除外パターン
 
 [tools.github_copilot]
 generate = false      # GitHub Copilot用のビルトインサポート
@@ -89,7 +93,16 @@ file_name = "copilot-instructions.md"
 generate = true
 dir_name = "./custom" # カスタムツールには必須
 file_name = "custom.md"  # カスタムツールには必須
+exclude = ["private*.md"]           # 機密ファイルをカスタムツールから除外
 ```
+
+### 除外パターン
+
+各ツールは `.system_prompt/` から特定のファイルを除外する `exclude` パターンを定義できます：
+- シェル形式のglobパターンを使用（`*`、`?`、`[...]`）
+- パターンは `.system_prompt/` ディレクトリからの相対パスに対してマッチ
+- 一般的なパターン例：`"003_*.md"`、`"temp*.md"`、`"private*.md"`、`"draft_*.md"`
+- 各ツールは除外パターンに該当しないファイルのみを処理
 
 ## 開発
 
@@ -128,10 +141,10 @@ make install
 
 `internal/generator/generator.go` がコアワークフローを制御：
 
-1. `.system_prompt/*.md` ファイルをスキャン（設定の除外パターンを適用）
+1. 有効な各ツールに対して、`.system_prompt/*.md` ファイルを収集（ツール固有の除外パターンを適用）
 2. ファイル名のアルファベット順でソート
 3. 設定されたヘッダー・フッターとコンテンツをマージ
-4. TOML設定に基づいて複数のターゲットに出力
+4. TOML設定に基づいてツール固有の出力ファイルを生成
 
 #### 国際化システム
 

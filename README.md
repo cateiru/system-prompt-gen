@@ -11,6 +11,7 @@ A Go CLI tool that aggregates multiple AI system prompt files from `.system_prom
 - 🌍 Full internationalization support (Japanese & English)
 - ⚙️ Flexible configuration management with TOML configuration files
 - 🔧 Support for custom AI tools
+- 🚫 Tool-specific file exclusion patterns
 - 🎨 Beautiful TUI using Bubble Tea
 
 ## Installation
@@ -68,17 +69,20 @@ Place your configuration file at `.system_prompt/settings.toml`:
 ```toml
 # Application settings
 [app]
-# Language setting is specified with --language (-l) flag
+header = "Custom header content"    # Optional header for all generated files
+footer = "Custom footer content"    # Optional footer for all generated files
 
 [tools.claude]
 generate = true       # Set to false to disable generation, default is true
 dir_name = ""         # Directory name (empty = current directory)
 file_name = ""        # File name (empty = default: "CLAUDE.md")
+exclude = ["003_*.md", "temp*.md"]  # Exclude patterns for files (optional)
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # Defaults to ".clinerules"
+exclude = ["001_*.md"]              # Tool-specific exclude patterns
 
 [tools.github_copilot]
 generate = false      # Built-in support for GitHub Copilot instructions
@@ -89,7 +93,16 @@ file_name = "copilot-instructions.md"
 generate = true
 dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
+exclude = ["private*.md"]           # Exclude sensitive files from custom tools
 ```
+
+### Exclude Patterns
+
+Each tool can define `exclude` patterns to filter out specific files from `.system_prompt/`:
+- Uses shell-style glob patterns (`*`, `?`, `[...]`)
+- Patterns are matched against relative paths from `.system_prompt/` directory  
+- Common patterns: `"003_*.md"`, `"temp*.md"`, `"private*.md"`, `"draft_*.md"`
+- Each tool processes only the files not excluded by its patterns
 
 ## Development
 
@@ -128,10 +141,10 @@ Primarily uses TOML-based configuration:
 
 `internal/generator/generator.go` controls the core workflow:
 
-1. Scan `.system_prompt/*.md` files (applying exclusion patterns from config)
+1. For each enabled tool, collect `.system_prompt/*.md` files (applying tool-specific exclusion patterns)
 2. Sort files alphabetically by filename
 3. Merge configured headers/footers with content
-4. Output to multiple targets based on TOML configuration
+4. Generate tool-specific output files based on TOML configuration
 
 #### Internationalization System
 
