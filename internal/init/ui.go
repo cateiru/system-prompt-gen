@@ -19,7 +19,8 @@ var (
 	listStyle = lipgloss.NewStyle().
 			BorderStyle(lipgloss.NormalBorder()).
 			BorderForeground(lipgloss.Color("#874BFD")).
-			Padding(1, 2)
+			Padding(1, 2).
+			Width(80)
 
 	selectedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#7D56F4")).
@@ -238,30 +239,29 @@ func (m initModel) View() string {
 }
 
 func (m initModel) renderOverwriteConfirm() string {
-	title := titleStyle.Render(i18n.T("init_overwrite_title"))
-	
 	options := []string{
+		fmt.Sprintf("%s\n", i18n.T("init_overwrite_message")),
 		fmt.Sprintf("%s %s", m.getCursor(0), i18n.T("yes")),
 		fmt.Sprintf("%s %s", m.getCursor(1), i18n.T("no")),
 	}
 
 	content := strings.Join(options, "\n")
-	
-	return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n",
-		title,
-		i18n.T("init_overwrite_message"),
+
+	return fmt.Sprintf("%s\n\n%s\n",
 		listStyle.Render(content),
-		i18n.T("init_navigation_help"))
+		i18n.T("init_navigation_help"),
+	)
 }
 
 func (m initModel) renderFileSelection() string {
-	title := titleStyle.Render(i18n.T("init_file_selection_title"))
-	
 	if len(m.initState.ExistingFiles) == 0 {
-		return fmt.Sprintf("%s\n\n%s\n", title, i18n.T("init_no_files_found"))
+		return fmt.Sprintf("%s\n", i18n.T("init_no_files_found"))
 	}
 
-	var options []string
+	options := []string{
+		fmt.Sprintf("%s\n", i18n.T("init_file_selection_message")),
+	}
+
 	for i, file := range m.initState.ExistingFiles {
 		selected := ""
 		if m.fileSelection[i] {
@@ -273,18 +273,18 @@ func (m initModel) renderFileSelection() string {
 	}
 
 	content := strings.Join(options, "\n")
-	
-	return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n",
-		title,
-		i18n.T("init_file_selection_message"),
+
+	return fmt.Sprintf("%s\n\n%s\n",
 		listStyle.Render(content),
-		i18n.T("init_selection_help"))
+		i18n.T("init_selection_help"),
+	)
 }
 
 func (m initModel) renderToolSelection() string {
-	title := titleStyle.Render(i18n.T("init_tool_selection_title"))
-	
-	var options []string
+	options := []string{
+		fmt.Sprintf("%s\n", i18n.T("init_tool_selection_message")),
+	}
+
 	for i, tool := range m.allTools {
 		selected := ""
 		if m.toolSelection[i] {
@@ -296,51 +296,50 @@ func (m initModel) renderToolSelection() string {
 	}
 
 	content := strings.Join(options, "\n")
-	
-	return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n",
-		title,
-		i18n.T("init_tool_selection_message"),
+
+	return fmt.Sprintf("%s\n\n%s\n",
 		listStyle.Render(content),
-		i18n.T("init_selection_help"))
+		i18n.T("init_selection_help"),
+	)
 }
 
 func (m initModel) renderConfirmation() string {
-	title := titleStyle.Render(i18n.T("init_confirmation_title"))
-	
 	var details []string
-	
+
 	// 選択されたファイル
 	if len(m.initState.SelectedFiles) > 0 {
 		details = append(details, i18n.T("init_selected_files")+":")
 		for _, file := range m.initState.SelectedFiles {
-			details = append(details, fmt.Sprintf("  - %s", file.Path))
+			details = append(details, fmt.Sprintf("\t◯ %s", file.Path))
 		}
 	} else {
 		details = append(details, i18n.T("init_no_files_selected"))
 	}
-	
+
 	details = append(details, "")
-	
+
 	// 選択されたツール
 	if len(m.initState.SelectedTools) > 0 {
 		details = append(details, i18n.T("init_selected_tools")+":")
 		for _, tool := range m.initState.SelectedTools {
-			details = append(details, fmt.Sprintf("  - %s", tool))
+			details = append(details, fmt.Sprintf("\t● %s", tool))
 		}
 	} else {
 		details = append(details, i18n.T("init_no_tools_selected"))
 	}
 
 	options := []string{
+		fmt.Sprintf("%s\n", i18n.T("init_confirmation_message")),
+		strings.Join(details, "\n"),
+		"\n\n",
 		fmt.Sprintf("%s %s", m.getCursor(0), i18n.T("proceed")),
 		fmt.Sprintf("%s %s", m.getCursor(1), i18n.T("cancel")),
 	}
 
-	return fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n",
-		title,
-		strings.Join(details, "\n"),
+	return fmt.Sprintf("%s\n\n%s\n",
 		listStyle.Render(strings.Join(options, "\n")),
-		i18n.T("init_navigation_help"))
+		i18n.T("init_navigation_help"),
+	)
 }
 
 func (m initModel) renderProcessing() string {

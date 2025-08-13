@@ -99,36 +99,24 @@
     "description": "Prompt for overwriting existing directory",
     "other": "Do you want to overwrite the existing directory?"
   },
-  "init_overwrite_title": {
-    "description": "Title for overwrite confirmation",
-    "other": "Overwrite Confirmation"
-  },
   "init_overwrite_message": {
     "description": "Message explaining overwrite action",
     "other": ".system_prompt directory already exists. Do you want to overwrite and continue?"
   },
-  "init_file_selection_title": {
-    "description": "Title for file selection screen",
-    "other": "📄 Select Existing Files"
-  },
   "init_file_selection_message": {
     "description": "Message for file selection screen",
-    "other": "Select existing system prompt files to import:"
+    "other": "Select existing system prompt files to import"
   },
   "init_no_files_found": {
     "description": "Message when no existing files are found",
     "other": "No existing system prompt files found."
   },
-  "init_tool_selection_title": {
-    "description": "Title for tool selection screen",
-    "other": "🛠️ Select Tools"
-  },
   "init_tool_selection_message": {
     "description": "Message for tool selection screen",
-    "other": "Select AI tools you want to generate prompt files for:"
+    "other": "Select AI tools you want to generate prompt files for"
   },
-  "init_confirmation_title": {
-    "description": "Title for confirmation screen",
+  "init_confirmation_message": {
+    "description": "Message for confirmation screen",
     "other": "✅ Confirm Settings"
   },
   "init_selected_files": {

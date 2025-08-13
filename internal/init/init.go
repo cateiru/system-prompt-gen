@@ -33,11 +33,12 @@ func NewInitState() (*InitState, error) {
 	}
 
 	return &InitState{
-		WorkDir:         workDir,
-		SystemPromptDir: filepath.Join(workDir, ".system_prompt"),
-		ExistingFiles:   []ExistingFile{},
-		SelectedFiles:   []ExistingFile{},
-		SelectedTools:   []string{},
+		WorkDir:            workDir,
+		SystemPromptDir:    filepath.Join(workDir, ".system_prompt"),
+		ExistingFiles:      []ExistingFile{},
+		SelectedFiles:      []ExistingFile{},
+		SelectedTools:      []string{},
+		OverwriteConfirmed: false,
 	}, nil
 }
 
