@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/cateiru/system-prompt-gen/internal/i18n"
 )
 
 // InitState は初期化プロセスの状態を管理する
@@ -38,7 +36,7 @@ func NewInitState() (*InitState, error) {
 		ExistingFiles:      []ExistingFile{},
 		SelectedFiles:      []ExistingFile{},
 		SelectedTools:      []string{},
-		OverwriteConfirmed: false,
+		OverwriteConfirmed: true,
 	}, nil
 }
 
@@ -136,11 +134,7 @@ func RunInit() error {
 	}
 
 	if exists {
-		fmt.Printf("%s\n", i18n.T("init_directory_exists"))
-		// TODO: 上書き確認のUIを実装
-		fmt.Printf("%s\n", i18n.T("init_overwrite_prompt"))
-		// 今のところは単純に続行
-		state.OverwriteConfirmed = true
+		state.OverwriteConfirmed = false
 	}
 
 	// 既存ファイルをスキャン

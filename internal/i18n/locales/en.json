@@ -91,14 +91,6 @@
     "description": "Error when init command is run in non-TTY environment",
     "other": "The init command only supports interactive mode. Please run in a TTY environment."
   },
-  "init_directory_exists": {
-    "description": "Message when .system_prompt directory already exists",
-    "other": "📁 .system_prompt directory already exists."
-  },
-  "init_overwrite_prompt": {
-    "description": "Prompt for overwriting existing directory",
-    "other": "Do you want to overwrite the existing directory?"
-  },
   "init_overwrite_message": {
     "description": "Message explaining overwrite action",
     "other": ".system_prompt directory already exists. Do you want to overwrite and continue?"

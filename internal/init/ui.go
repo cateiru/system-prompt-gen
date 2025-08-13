@@ -60,17 +60,17 @@ type initModel struct {
 }
 
 // runInteractiveInit はインタラクティブな初期化UIを実行する
-func runInteractiveInit(state *InitState) error {
+func runInteractiveInit(initState *InitState) error {
 	model := initModel{
-		initState:     state,
+		initState:     initState,
 		fileSelection: make(map[int]bool),
 		toolSelection: make(map[int]bool),
 		allTools:      []string{"claude", "cline", "github_copilot"},
 	}
 
 	// 初期状態を設定
-	if state.OverwriteConfirmed {
-		if len(state.ExistingFiles) > 0 {
+	if initState.OverwriteConfirmed {
+		if len(initState.ExistingFiles) > 0 {
 			model.state = stateFileSelection
 		} else {
 			model.state = stateToolSelection
