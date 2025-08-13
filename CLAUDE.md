@@ -117,16 +117,32 @@ file_name = "copilot-instructions.md"
 generate = true
 dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
+include = ["public_*.md", "common_*.md"]  # Include only public and common files
 exclude = ["private*.md"]           # Exclude sensitive files from custom tools
 ```
 
-### Exclude Patterns
+### Include/Exclude Patterns
 
-Each tool can define `exclude` patterns to filter out specific files from `.system_prompt/`:
-- Uses `filepath.Match` for pattern matching (shell-style patterns)
+Each tool can define `include` and `exclude` patterns to filter files from `.system_prompt/`:
+
+#### Include Patterns
+- `include = ["pattern1", "pattern2"]` - Include only files matching these patterns
+- If undefined, all files are included by default
+- Uses shell-style glob patterns (`*`, `?`, `[...]`)
 - Patterns are matched against relative paths from `.system_prompt/` directory
+- Common patterns: `"01-*.md"`, `"public_*.md"`, `"*"` (all files)
+
+#### Exclude Patterns  
+- `exclude = ["pattern1", "pattern2"]` - Exclude files matching these patterns
+- **Exclude takes priority** - files matching both include and exclude patterns are excluded
+- Uses `filepath.Match` for pattern matching (shell-style patterns)
 - Common patterns: `"003_*.md"`, `"temp*.md"`, `"private*.md"`, `"draft_*.md"`
-- Each tool processes only the files not excluded by its patterns
+
+#### Processing Order
+1. If `include` is defined, only files matching include patterns are considered
+2. If `include` is undefined, all files are considered
+3. Files matching `exclude` patterns are then removed (exclude takes priority)
+4. Each tool processes only the remaining files
 
 ## CLI Usage Patterns
 
@@ -157,6 +173,14 @@ LANG=en_US.UTF-8 system-prompt-gen
 
 ### Important Usage Notes
 
-- **Use `-i=false` for automation**: When running in automated environments, CI/CD pipelines, or scripts where TTY is not available, always use `-i=false` to avoid TTY-related errors
+- **TTY Auto-Detection**: The tool automatically detects non-TTY environments (CI/CD, Claude Code, pipes, etc.) and falls back to non-interactive mode, even when `-i=true` is specified. This eliminates the need to manually specify `-i=false` in automated environments.
+- **Manual override**: Use `-i=false` to explicitly force non-interactive mode when needed
 - **Example directory**: The `example/` directory contains a complete working setup with exclude patterns demonstration
 - **Test your configuration**: Run `cd example && ../.bin/system-prompt-gen -i=false` to see exclude patterns in action
+
+### TTY Auto-Fallback Behavior
+
+The application includes automatic TTY detection (implemented in `cmd/root.go:70-74`):
+- When interactive mode is enabled (`-i=true`) but no TTY is detected, the tool automatically switches to non-interactive mode
+- A localized message is displayed to inform the user of the automatic fallback
+- This works seamlessly in environments like Claude Code, CI/CD pipelines, and shell pipes
