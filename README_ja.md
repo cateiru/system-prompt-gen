@@ -13,6 +13,7 @@
 - 🔧 カスタムAIツールへの対応
 - 🚫🔍 ツール別ファイル包含/除外パターン機能
 - 🎨 Bubble Teaを使用した美しいTUI
+- 🎯 自動ファイル検出・移行機能付きプロジェクト初期化
 
 ## インストール
 
@@ -53,6 +54,19 @@ make build
 
 # 02-coding
 [02-coding.mdの内容]
+```
+
+### 初回セットアップ
+
+```bash
+# 新しいプロジェクトを初期化（インタラクティブTUI）
+system-prompt-gen init
+
+# 実行内容：
+# 1. .system_prompt/ ディレクトリの作成
+# 2. 既存のAIツールファイル（CLAUDE.md、.clinerules等）のスキャン
+# 3. ツール選択とファイル移行のガイド
+# 4. 初期settings.toml設定の生成
 ```
 
 ### 基本的な使用方法
@@ -165,8 +179,8 @@ exclude = ["private*.md"]           # 機密ファイルをカスタムツール
 make build
 
 # テストコマンド（開発用）
-make test-unit      # ユニットテストを実行
-make test-coverage  # カバレッジレポート付きでテスト実行
+make test-unit      # tparse形式でユニットテストを実行（要: go install github.com/mfridman/tparse@latest）
+make test-coverage  # カバレッジレポート付きでテスト実行（coverage.htmlを生成）
 make test-verbose   # レース検出付きでテスト実行
 
 # 統合テスト
@@ -178,6 +192,9 @@ make clean
 
 # システムPATHにインストール
 make install
+
+# ヘルプコマンド
+make help          # 利用可能な全Makefileターゲットを表示
 ```
 
 ### アーキテクチャ

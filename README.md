@@ -13,6 +13,7 @@ A Go CLI tool that aggregates multiple AI system prompt files from `.system_prom
 - 🔧 Support for custom AI tools
 - 🚫🔍 Tool-specific include/exclude file patterns
 - 🎨 Beautiful TUI using Bubble Tea
+- 🎯 Project initialization with automatic file detection and migration
 
 ## Installation
 
@@ -53,6 +54,19 @@ For example, if you have `01-base.md` and `02-coding.md` files, the output will 
 
 # 02-coding
 [Content of 02-coding.md]
+```
+
+### First-Time Setup
+
+```bash
+# Initialize a new project (interactive TUI)
+system-prompt-gen init
+
+# This will:
+# 1. Create .system_prompt/ directory
+# 2. Scan for existing AI tool files (CLAUDE.md, .clinerules, etc.)
+# 3. Guide you through tool selection and file migration
+# 4. Generate initial settings.toml configuration
 ```
 
 ### Basic Usage
@@ -165,8 +179,8 @@ Each tool can define `include` and `exclude` patterns to filter files from `.sys
 make build
 
 # Test commands (for development)
-make test-unit      # Run unit tests
-make test-coverage  # Run tests with coverage report
+make test-unit      # Run unit tests with tparse formatting (requires: go install github.com/mfridman/tparse@latest)
+make test-coverage  # Run tests with coverage report (generates coverage.html)
 make test-verbose   # Run tests with race detection
 
 # Integration testing
@@ -178,6 +192,9 @@ make clean
 
 # Install to system PATH
 make install
+
+# Help command
+make help          # Show all available Makefile targets
 ```
 
 ### Architecture

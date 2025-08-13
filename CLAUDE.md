@@ -14,9 +14,12 @@ make build
 # or
 go build -o .bin/system-prompt-gen .
 
+# Project initialization
+system-prompt-gen init   # Initialize .system_prompt directory and scan existing files
+
 # Test commands (use these for development)
-make test-unit      # Run unit tests (go test -v ./...)
-make test-coverage  # Run tests with coverage report
+make test-unit      # Run unit tests with tparse formatting (requires: go install github.com/mfridman/tparse@latest)
+make test-coverage  # Run tests with coverage report (generates coverage.html)
 make test-verbose   # Run tests with race detection
 
 # Integration testing with example configuration
@@ -28,6 +31,9 @@ make clean
 
 # Install to system PATH
 make install
+
+# Help command
+make help          # Show all available Makefile targets
 ```
 
 ## Architecture and Core Components
@@ -76,6 +82,16 @@ When TOML settings exist, the generator:
 - Loading: File collection phase
 - Success: File count and target preview display
 - Error: Error display with retry option
+
+### Project Initialization System
+`internal/init/` provides project setup functionality:
+- `init.go`: Core initialization logic with InitState management
+- `scanner.go`: Scans existing AI tool configuration files (CLAUDE.md, .clinerules, etc.)
+- `ui.go`: Interactive TUI for project initialization flow
+- The `init` command requires TTY environment and guides users through:
+  1. .system_prompt directory creation
+  2. Existing file detection and migration
+  3. Tool selection and configuration setup
 
 ### Internationalization System
 `internal/i18n/i18n.go` provides comprehensive i18n support:
@@ -146,6 +162,19 @@ Each tool can define `include` and `exclude` patterns to filter files from `.sys
 
 ## CLI Usage Patterns
 
+### First-Time Setup
+```bash
+# Initialize a new project (interactive TUI)
+system-prompt-gen init
+
+# This will:
+# 1. Create .system_prompt/ directory
+# 2. Scan for existing AI tool files (CLAUDE.md, .clinerules, etc.)
+# 3. Guide you through tool selection and file migration
+# 4. Generate initial settings.toml configuration
+```
+
+### Regular Usage
 ```bash
 # Basic usage (uses .system_prompt/ in current directory)
 system-prompt-gen
