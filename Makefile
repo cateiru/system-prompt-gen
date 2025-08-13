@@ -1,7 +1,7 @@
 BINARY_NAME=system-prompt-gen
 BUILD_DIR=.bin
 
-.PHONY: build clean test run example test-unit test-coverage test-verbose test-pretty
+.PHONY: build clean test run example test-unit test-coverage test-verbose test-pretty lint
 
 build:
 	@mkdir -p $(BUILD_DIR)
@@ -33,6 +33,10 @@ test-verbose:
 	@which tparse > /dev/null || (echo "tparseがインストールされていません。'go install github.com/mfridman/tparse@latest'を実行してください" && exit 1)
 	@set -o pipefail && go test -json -race -v ./... | tparse
 
+# Run lint checks
+lint:
+	@which golangci-lint > /dev/null || (echo "golangci-lintがインストールされていません。'go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest'を実行してください" && exit 1)
+	golangci-lint run --timeout=10m
 
 # Run integration test with example
 test: build
@@ -51,6 +55,7 @@ help:
 	@echo "使用可能なターゲット:"
 	@echo "  build        - プログラムをビルド"
 	@echo "  clean        - ビルドファイルと生成ファイルを削除"
+	@echo "  lint         - golangci-lintでコードを静的解析"
 	@echo "  test-unit    - ユニットテストを実行"
 	@echo "  test         - exampleディレクトリで統合テスト実行"
 	@echo "  interactive  - exampleディレクトリでインタラクティブモード実行"

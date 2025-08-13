@@ -58,7 +58,6 @@ type initModel struct {
 	toolSelection map[int]bool
 	allTools      []string
 	err           error
-	message       string
 }
 
 // runInteractiveInit はインタラクティブな初期化UIを実行する
