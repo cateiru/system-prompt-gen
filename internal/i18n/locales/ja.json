@@ -78,5 +78,121 @@
   "tty_fallback_message": {
     "description": "Message when automatically falling back from interactive mode due to non-TTY environment",
     "other": "ℹ️ TTY環境が検出されないため、非インタラクティブモードで実行します"
+  },
+  "init_short_description": {
+    "description": "Short description for init command",
+    "other": "プロジェクトの初期セットアップを行います"
+  },
+  "init_long_description": {
+    "description": "Long description for init command",
+    "other": "system-prompt-gen init は現在のディレクトリに .system_prompt フォルダを作成し、\n既存のシステムプロンプトファイルを検出してプロジェクトを初期化します。"
+  },
+  "init_requires_tty": {
+    "description": "Error when init command is run in non-TTY environment",
+    "other": "init コマンドはインタラクティブモードのみサポートされています。TTY環境で実行してください。"
+  },
+  "init_directory_exists": {
+    "description": "Message when .system_prompt directory already exists",
+    "other": "📁 .system_prompt ディレクトリが既に存在します。"
+  },
+  "init_overwrite_prompt": {
+    "description": "Prompt for overwriting existing directory",
+    "other": "既存のディレクトリを上書きしますか？"
+  },
+  "init_overwrite_title": {
+    "description": "Title for overwrite confirmation",
+    "other": "上書き確認"
+  },
+  "init_overwrite_message": {
+    "description": "Message explaining overwrite action",
+    "other": ".system_prompt ディレクトリが既に存在します。上書きして続行しますか？"
+  },
+  "init_file_selection_title": {
+    "description": "Title for file selection screen",
+    "other": "📄 既存ファイルの選択"
+  },
+  "init_file_selection_message": {
+    "description": "Message for file selection screen",
+    "other": "取り込みたい既存のシステムプロンプトファイルを選択してください："
+  },
+  "init_no_files_found": {
+    "description": "Message when no existing files are found",
+    "other": "既存のシステムプロンプトファイルが見つかりませんでした。"
+  },
+  "init_tool_selection_title": {
+    "description": "Title for tool selection screen",
+    "other": "🛠️ ツールの選択"
+  },
+  "init_tool_selection_message": {
+    "description": "Message for tool selection screen",
+    "other": "プロンプトファイルを生成したいAIツールを選択してください："
+  },
+  "init_confirmation_title": {
+    "description": "Title for confirmation screen",
+    "other": "✅ 設定確認"
+  },
+  "init_selected_files": {
+    "description": "Header for selected files list",
+    "other": "選択されたファイル"
+  },
+  "init_no_files_selected": {
+    "description": "Message when no files are selected",
+    "other": "ファイルが選択されていません。空の001_default.mdを作成します。"
+  },
+  "init_selected_tools": {
+    "description": "Header for selected tools list",
+    "other": "選択されたツール"
+  },
+  "init_no_tools_selected": {
+    "description": "Message when no tools are selected",
+    "other": "ツールが選択されていません。"
+  },
+  "init_processing_title": {
+    "description": "Title for processing screen",
+    "other": "🔄 初期化中"
+  },
+  "init_processing_message": {
+    "description": "Message during processing",
+    "other": "ファイルを作成しています..."
+  },
+  "init_success_title": {
+    "description": "Title for success screen",
+    "other": "🎉 初期化完了"
+  },
+  "init_success_message": {
+    "description": "Message on successful initialization",
+    "other": "プロジェクトの初期化が完了しました！\n\n.system_prompt/001_default.md と settings.toml が作成されました。"
+  },
+  "init_error_title": {
+    "description": "Title for error screen",
+    "other": "❌ 初期化エラー"
+  },
+  "init_error_message": {
+    "description": "Message when initialization fails",
+    "other": "初期化中にエラーが発生しました"
+  },
+  "init_navigation_help": {
+    "description": "Help text for navigation",
+    "other": "[↑↓] 移動  [Enter] 決定  [q] 終了"
+  },
+  "init_selection_help": {
+    "description": "Help text for selection screens",
+    "other": "[↑↓] 移動  [Space] 選択/解除  [Enter] 次へ  [q] 終了"
+  },
+  "yes": {
+    "description": "Yes option",
+    "other": "はい"
+  },
+  "no": {
+    "description": "No option",
+    "other": "いいえ"
+  },
+  "proceed": {
+    "description": "Proceed option",
+    "other": "実行"
+  },
+  "cancel": {
+    "description": "Cancel option",
+    "other": "キャンセル"
   }
 }
