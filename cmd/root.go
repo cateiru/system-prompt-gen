@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 
 	"github.com/cateiru/system-prompt-gen/internal/config"
@@ -65,7 +66,14 @@ func runWithCmd(cmd *cobra.Command) error {
 
 	// i18n初期化後にコマンドの説明を更新（NOTE: 実行時に行う）
 
-	if interactiveMode {
+	// TTY検出による自動フォールバック
+	effectiveInteractiveMode := interactiveMode
+	if interactiveMode && !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		effectiveInteractiveMode = false
+		cmd.Printf("%s\n", i18n.T("tty_fallback_message"))
+	}
+
+	if effectiveInteractiveMode {
 		return ui.RunInteractive(settings)
 	}
 

@@ -74,5 +74,9 @@
   "failed_to_create_directory": {
     "description": "Error when directory creation fails",
     "other": "Failed to create directory {{.DirName}}: {{.Error}}"
+  },
+  "tty_fallback_message": {
+    "description": "Message when automatically falling back from interactive mode due to non-TTY environment",
+    "other": "ℹ️ TTY environment not detected, running in non-interactive mode"
   }
 }
