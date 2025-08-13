@@ -2,11 +2,13 @@ package init
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/cateiru/system-prompt-gen/internal/config"
 	"github.com/cateiru/system-prompt-gen/internal/i18n"
 )
 
@@ -61,11 +63,18 @@ type initModel struct {
 
 // runInteractiveInit はインタラクティブな初期化UIを実行する
 func runInteractiveInit(initState *InitState) error {
+	// DefaultKnownToolFileNamesからツール名を取得してソート
+	var allTools []string
+	for toolName := range config.DefaultKnownToolFileNames {
+		allTools = append(allTools, toolName)
+	}
+	sort.Strings(allTools)
+
 	model := initModel{
 		initState:     initState,
 		fileSelection: make(map[int]bool),
 		toolSelection: make(map[int]bool),
-		allTools:      []string{"claude", "cline", "github_copilot"},
+		allTools:      allTools,
 	}
 
 	// 初期状態を設定

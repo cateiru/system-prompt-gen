@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+
+	"github.com/cateiru/system-prompt-gen/internal/config"
 )
 
 // InitState は初期化プロセスの状態を管理する
@@ -98,11 +101,17 @@ func (state *InitState) generateSettingsContent() string {
 	content += "# footer = \"Custom footer content\"\n\n"
 
 	// 選択されたツールのみ generate = true にする
-	allTools := []string{"claude", "cline", "github_copilot"}
 	selectedToolsMap := make(map[string]bool)
 	for _, tool := range state.SelectedTools {
 		selectedToolsMap[tool] = true
 	}
+
+	// DefaultKnownToolFileNamesからツール名を取得してソート
+	var allTools []string
+	for tool := range config.DefaultKnownToolFileNames {
+		allTools = append(allTools, tool)
+	}
+	sort.Strings(allTools)
 
 	for _, tool := range allTools {
 		generate := selectedToolsMap[tool]
