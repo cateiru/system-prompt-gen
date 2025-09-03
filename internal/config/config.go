@@ -34,18 +34,22 @@ type Settings struct {
 }
 
 var DefaultKnownToolFileNames = map[string]AIToolPaths{
-	"claude": {
-		DirName:  "",
-		FileName: "CLAUDE.md",
-	},
-	"cline": {
-		DirName:  "",
-		FileName: ".clinerules",
-	},
-	"github_copilot": {
-		DirName:  ".github",
-		FileName: "copilot-instructions.md",
-	},
+    "claude": {
+        DirName:  "",
+        FileName: "CLAUDE.md",
+    },
+    "cline": {
+        DirName:  "",
+        FileName: ".clinerules",
+    },
+    "github_copilot": {
+        DirName:  ".github",
+        FileName: "copilot-instructions.md",
+    },
+    "agents": {
+        DirName:  "",
+        FileName: "AGENTS.md",
+    },
 }
 
 // DefaultSettings はアプリケーションの設定 (Settings) のデフォルト値を返します。
