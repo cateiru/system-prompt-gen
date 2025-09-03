@@ -74,5 +74,105 @@
   "failed_to_create_directory": {
     "description": "Error when directory creation fails",
     "other": "Failed to create directory {{.DirName}}: {{.Error}}"
+  },
+  "tty_fallback_message": {
+    "description": "Message when automatically falling back from interactive mode due to non-TTY environment",
+    "other": "ℹ️ TTY environment not detected, running in non-interactive mode"
+  },
+  "init_short_description": {
+    "description": "Short description for init command",
+    "other": "Initialize project setup"
+  },
+  "init_long_description": {
+    "description": "Long description for init command",
+    "other": "system-prompt-gen init creates a .system_prompt folder in the current directory,\ndetects existing system prompt files, and initializes the project."
+  },
+  "init_requires_tty": {
+    "description": "Error when init command is run in non-TTY environment",
+    "other": "The init command only supports interactive mode. Please run in a TTY environment."
+  },
+  "init_overwrite_message": {
+    "description": "Message explaining overwrite action",
+    "other": ".system_prompt directory already exists. Do you want to overwrite and continue?"
+  },
+  "init_file_selection_message": {
+    "description": "Message for file selection screen",
+    "other": "Select existing system prompt files to import"
+  },
+  "init_no_files_found": {
+    "description": "Message when no existing files are found",
+    "other": "No existing system prompt files found."
+  },
+  "init_tool_selection_message": {
+    "description": "Message for tool selection screen",
+    "other": "Select AI tools you want to generate prompt files for"
+  },
+  "init_confirmation_message": {
+    "description": "Message for confirmation screen",
+    "other": "✅ Confirm Settings"
+  },
+  "init_selected_files": {
+    "description": "Header for selected files list",
+    "other": "Selected files"
+  },
+  "init_no_files_selected": {
+    "description": "Message when no files are selected",
+    "other": "No files selected. An empty 001_default.md will be created."
+  },
+  "init_selected_tools": {
+    "description": "Header for selected tools list",
+    "other": "Selected tools"
+  },
+  "init_no_tools_selected": {
+    "description": "Message when no tools are selected",
+    "other": "No tools selected."
+  },
+  "init_processing_title": {
+    "description": "Title for processing screen",
+    "other": "🔄 Initializing"
+  },
+  "init_processing_message": {
+    "description": "Message during processing",
+    "other": "Creating files..."
+  },
+  "init_success_title": {
+    "description": "Title for success screen",
+    "other": "🎉 Initialization Complete"
+  },
+  "init_success_message": {
+    "description": "Message on successful initialization",
+    "other": "Project initialization completed!\n\n.system_prompt/001_default.md and settings.toml have been created."
+  },
+  "init_error_title": {
+    "description": "Title for error screen",
+    "other": "❌ Initialization Error"
+  },
+  "init_error_message": {
+    "description": "Message when initialization fails",
+    "other": "An error occurred during initialization"
+  },
+  "init_navigation_help": {
+    "description": "Help text for navigation",
+    "other": "[↑↓] Move  [Enter] Select  [q] Quit"
+  },
+  "init_selection_help": {
+    "description": "Help text for selection screens",
+    "other": "[↑↓] Move  [Space] Toggle  [Enter] Next  [q] Quit"
+  },
+  "yes": {
+    "description": "Yes option",
+    "other": "Yes"
+  },
+  "no": {
+    "description": "No option",
+    "other": "No"
+  },
+  "proceed": {
+    "description": "Proceed option",
+    "other": "Proceed"
+  },
+  "cancel": {
+    "description": "Cancel option",
+    "other": "Cancel"
   }
 }

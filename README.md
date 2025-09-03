@@ -11,7 +11,9 @@ A Go CLI tool that aggregates multiple AI system prompt files from `.system_prom
 - 🌍 Full internationalization support (Japanese & English)
 - ⚙️ Flexible configuration management with TOML configuration files
 - 🔧 Support for custom AI tools
+- 🚫🔍 Tool-specific include/exclude file patterns
 - 🎨 Beautiful TUI using Bubble Tea
+- 🎯 Project initialization with automatic file detection and migration
 
 ## Installation
 
@@ -29,6 +31,44 @@ make build
 
 ## Usage
 
+### Output File Format
+
+Generated files follow this format:
+```markdown
+[Header content from settings.toml]
+# filename-without-extension
+
+File content here...
+
+# another-filename
+
+Another file content...
+
+[Footer content from settings.toml]
+```
+
+For example, if you have `01-base.md` and `02-coding.md` files, the output will contain:
+```markdown
+# 01-base
+[Content of 01-base.md]
+
+# 02-coding
+[Content of 02-coding.md]
+```
+
+### First-Time Setup
+
+```bash
+# Initialize a new project (interactive TUI)
+system-prompt-gen init
+
+# This will:
+# 1. Create .system_prompt/ directory
+# 2. Scan for existing AI tool files (CLAUDE.md, .clinerules, etc.)
+# 3. Guide you through tool selection and file migration
+# 4. Generate initial settings.toml configuration
+```
+
 ### Basic Usage
 
 ```bash
@@ -38,8 +78,11 @@ system-prompt-gen
 # Specify custom settings file location
 system-prompt-gen -s /path/to/settings.toml
 
-# Run in interactive mode
+# Run in interactive mode (default: true)
 system-prompt-gen -i
+
+# Run in non-interactive mode (for automation/CI)
+system-prompt-gen -i=false
 
 # Specify language
 system-prompt-gen --language ja
@@ -68,28 +111,64 @@ Place your configuration file at `.system_prompt/settings.toml`:
 ```toml
 # Application settings
 [app]
-# Language setting is specified with --language (-l) flag
+header = "Custom header content"    # Optional header for all generated files
+footer = "Custom footer content"    # Optional footer for all generated files
 
 [tools.claude]
 generate = true       # Set to false to disable generation, default is true
 dir_name = ""         # Directory name (empty = current directory)
 file_name = ""        # File name (empty = default: "CLAUDE.md")
+include = ["01-*.md", "02-*.md"]  # Include only specific patterns (optional, undefined = include all)
+exclude = ["003_*.md", "temp*.md"]  # Exclude patterns for files (exclude takes priority over include)
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # Defaults to ".clinerules"
+include = ["*"]       # Include all files (explicit specification)
+exclude = ["01-*.md"]              # Tool-specific exclude patterns
 
 [tools.github_copilot]
 generate = false      # Built-in support for GitHub Copilot instructions
 dir_name = ".github"  # Default: .github/copilot-instructions.md
 file_name = "copilot-instructions.md"
 
-[tools.custom_tool]   # Add custom AI tools
+[tools.aider]        # Custom tool example: Aider AI coding assistant
+generate = true
+dir_name = ""         # Current directory (required for custom tools)
+file_name = ".aider_prompt"  # Required for custom tools
+include = ["01-*.md", "02-*.md"]  # Include only basic setup files
+
+[tools.custom_tool]   # Add other custom AI tools
 generate = true
 dir_name = "./custom" # Required for custom tools
 file_name = "custom.md"  # Required for custom tools
+include = ["public_*.md", "common_*.md"]  # Include only public and common files
+exclude = ["private*.md"]           # Exclude sensitive files from custom tools
 ```
+
+### Include/Exclude Patterns
+
+Each tool can define `include` and `exclude` patterns to filter files from `.system_prompt/`:
+
+#### Include Patterns
+- `include = ["pattern1", "pattern2"]` - Include only files matching these patterns
+- If undefined, all files are included by default
+- Uses shell-style glob patterns (`*`, `?`, `[...]`)
+- Patterns are matched against relative paths from `.system_prompt/` directory
+- Common patterns: `"01-*.md"`, `"public_*.md"`, `"*"` (all files)
+
+#### Exclude Patterns  
+- `exclude = ["pattern1", "pattern2"]` - Exclude files matching these patterns
+- **Exclude takes priority** - files matching both include and exclude patterns are excluded
+- Uses shell-style glob patterns (`*`, `?`, `[...]`)
+- Common patterns: `"003_*.md"`, `"temp*.md"`, `"private*.md"`, `"draft_*.md"`
+
+#### Processing Order
+1. If `include` is defined, only files matching include patterns are considered
+2. If `include` is undefined, all files are considered
+3. Files matching `exclude` patterns are then removed (exclude takes priority)
+4. Each tool processes only the remaining files
 
 ## Development
 
@@ -100,8 +179,8 @@ file_name = "custom.md"  # Required for custom tools
 make build
 
 # Test commands (for development)
-make test-unit      # Run unit tests
-make test-coverage  # Run tests with coverage report
+make test-unit      # Run unit tests with tparse formatting (requires: go install github.com/mfridman/tparse@latest)
+make test-coverage  # Run tests with coverage report (generates coverage.html)
 make test-verbose   # Run tests with race detection
 
 # Integration testing
@@ -113,6 +192,9 @@ make clean
 
 # Install to system PATH
 make install
+
+# Help command
+make help          # Show all available Makefile targets
 ```
 
 ### Architecture
@@ -128,10 +210,10 @@ Primarily uses TOML-based configuration:
 
 `internal/generator/generator.go` controls the core workflow:
 
-1. Scan `.system_prompt/*.md` files (applying exclusion patterns from config)
+1. For each enabled tool, collect `.system_prompt/*.md` files (applying tool-specific include/exclude patterns)
 2. Sort files alphabetically by filename
 3. Merge configured headers/footers with content
-4. Output to multiple targets based on TOML configuration
+4. Generate tool-specific output files based on TOML configuration
 
 #### Internationalization System
 
@@ -143,10 +225,14 @@ Primarily uses TOML-based configuration:
 
 ## Supported AI Tools
 
+### Built-in Tools
 - **Claude** - Prompt files for Anthropic Claude
-- **Cline** - Rule files for Cline VS Code extension
+- **Cline** - Rule files for Cline VS Code extension  
 - **GitHub Copilot** - Instruction files for GitHub Copilot
-- **Custom Tools** - Custom files for any AI tool
+
+### Custom Tools
+- **Any AI Tool** - Define custom tools with `dir_name` and `file_name` settings
+- **Example**: Aider, Cursor, or any other AI tool can be configured as custom tools
 
 ## License
 

@@ -11,7 +11,9 @@
 - 🌍 完全な国際化サポート（日本語・英語）
 - ⚙️ TOML設定ファイルによる柔軟な設定管理
 - 🔧 カスタムAIツールへの対応
+- 🚫🔍 ツール別ファイル包含/除外パターン機能
 - 🎨 Bubble Teaを使用した美しいTUI
+- 🎯 自動ファイル検出・移行機能付きプロジェクト初期化
 
 ## インストール
 
@@ -29,6 +31,44 @@ make build
 
 ## 使用方法
 
+### 出力ファイル形式
+
+生成されるファイルは以下の形式に従います：
+```markdown
+[settings.tomlのヘッダー内容]
+# ファイル名（拡張子なし）
+
+ファイル内容...
+
+# 別のファイル名
+
+別のファイル内容...
+
+[settings.tomlのフッター内容]
+```
+
+例えば、`01-base.md` と `02-coding.md` ファイルがある場合、出力は以下のようになります：
+```markdown
+# 01-base
+[01-base.mdの内容]
+
+# 02-coding
+[02-coding.mdの内容]
+```
+
+### 初回セットアップ
+
+```bash
+# 新しいプロジェクトを初期化（インタラクティブTUI）
+system-prompt-gen init
+
+# 実行内容：
+# 1. .system_prompt/ ディレクトリの作成
+# 2. 既存のAIツールファイル（CLAUDE.md、.clinerules等）のスキャン
+# 3. ツール選択とファイル移行のガイド
+# 4. 初期settings.toml設定の生成
+```
+
 ### 基本的な使用方法
 
 ```bash
@@ -38,8 +78,11 @@ system-prompt-gen
 # 設定ファイルの場所を指定
 system-prompt-gen -s /path/to/settings.toml
 
-# インタラクティブモードで実行
+# インタラクティブモードで実行（デフォルト: true）
 system-prompt-gen -i
+
+# 非インタラクティブモードで実行（自動化/CI用）
+system-prompt-gen -i=false
 
 # 言語を指定
 system-prompt-gen --language ja
@@ -68,28 +111,64 @@ your-project/
 ```toml
 # アプリケーション設定
 [app]
-# 言語設定は --language (-l) フラグで指定
+header = "カスタムヘッダー内容"    # 全生成ファイルに追加するヘッダー（オプション）
+footer = "カスタムフッター内容"    # 全生成ファイルに追加するフッター（オプション）
 
 [tools.claude]
 generate = true       # 生成を無効にするにはfalseに設定、デフォルトはtrue
 dir_name = ""         # ディレクトリ名（空文字列 = カレントディレクトリ）
 file_name = ""        # ファイル名（空文字列 = デフォルト: "CLAUDE.md"）
+include = ["01-*.md", "02-*.md"]  # 特定パターンのみ包含（オプション、未定義なら全て包含）
+exclude = ["003_*.md", "temp*.md"]  # ファイル除外パターン（excludeがincludeより優先）
 
 [tools.cline]
 generate = true
 dir_name = ""
 file_name = ""        # デフォルトは".clinerules"
+include = ["*"]       # 全ファイルを包含（明示的指定）
+exclude = ["01-*.md"]              # ツール固有の除外パターン
 
 [tools.github_copilot]
 generate = false      # GitHub Copilot用のビルトインサポート
 dir_name = ".github"  # デフォルト: .github/copilot-instructions.md
 file_name = "copilot-instructions.md"
 
-[tools.custom_tool]   # カスタムAIツールの追加
+[tools.aider]        # カスタムツール例: Aider AIコーディングアシスタント
+generate = true
+dir_name = ""         # カレントディレクトリ（カスタムツールに必須）
+file_name = ".aider_prompt"  # カスタムツールに必須
+include = ["01-*.md", "02-*.md"]  # 基本設定ファイルのみ包含
+
+[tools.custom_tool]   # その他のカスタムAIツール
 generate = true
 dir_name = "./custom" # カスタムツールには必須
 file_name = "custom.md"  # カスタムツールには必須
+include = ["public_*.md", "common_*.md"]  # 公開ファイルと共通ファイルのみ包含
+exclude = ["private*.md"]           # 機密ファイルをカスタムツールから除外
 ```
+
+### 包含/除外パターン
+
+各ツールは `.system_prompt/` からファイルをフィルタリングする `include` と `exclude` パターンを定義できます：
+
+#### 包含パターン (Include)
+- `include = ["pattern1", "pattern2"]` - これらのパターンに該当するファイルのみを包含
+- 未定義の場合、デフォルトで全ファイルが包含される
+- シェル形式のglobパターンを使用（`*`、`?`、`[...]`）
+- パターンは `.system_prompt/` ディレクトリからの相対パスに対してマッチ
+- 一般的なパターン例：`"01-*.md"`、`"public_*.md"`、`"*"`（全ファイル）
+
+#### 除外パターン (Exclude)
+- `exclude = ["pattern1", "pattern2"]` - これらのパターンに該当するファイルを除外
+- **除外が優先** - includeとexclude両方に該当するファイルは除外される
+- シェル形式のglobパターンを使用（`*`、`?`、`[...]`）
+- 一般的なパターン例：`"003_*.md"`、`"temp*.md"`、`"private*.md"`、`"draft_*.md"`
+
+#### 処理順序
+1. `include` が定義されている場合、includeパターンに該当するファイルのみが考慮される
+2. `include` が未定義の場合、全ファイルが考慮される
+3. `exclude` パターンに該当するファイルが除去される（excludeが優先）
+4. 各ツールは残ったファイルのみを処理
 
 ## 開発
 
@@ -100,8 +179,8 @@ file_name = "custom.md"  # カスタムツールには必須
 make build
 
 # テストコマンド（開発用）
-make test-unit      # ユニットテストを実行
-make test-coverage  # カバレッジレポート付きでテスト実行
+make test-unit      # tparse形式でユニットテストを実行（要: go install github.com/mfridman/tparse@latest）
+make test-coverage  # カバレッジレポート付きでテスト実行（coverage.htmlを生成）
 make test-verbose   # レース検出付きでテスト実行
 
 # 統合テスト
@@ -113,6 +192,9 @@ make clean
 
 # システムPATHにインストール
 make install
+
+# ヘルプコマンド
+make help          # 利用可能な全Makefileターゲットを表示
 ```
 
 ### アーキテクチャ
@@ -128,10 +210,10 @@ make install
 
 `internal/generator/generator.go` がコアワークフローを制御：
 
-1. `.system_prompt/*.md` ファイルをスキャン（設定の除外パターンを適用）
+1. 有効な各ツールに対して、`.system_prompt/*.md` ファイルを収集（ツール固有の包含/除外パターンを適用）
 2. ファイル名のアルファベット順でソート
 3. 設定されたヘッダー・フッターとコンテンツをマージ
-4. TOML設定に基づいて複数のターゲットに出力
+4. TOML設定に基づいてツール固有の出力ファイルを生成
 
 #### 国際化システム
 
@@ -143,10 +225,14 @@ make install
 
 ## サポートするAIツール
 
+### ビルトインツール
 - **Claude** - Anthropic Claude用プロンプトファイル
 - **Cline** - VS Code拡張のCline用ルールファイル
 - **GitHub Copilot** - GitHub Copilot用指示ファイル
-- **カスタムツール** - 任意のAIツール用カスタムファイル
+
+### カスタムツール
+- **任意AIツール** - `dir_name` と `file_name` 設定でカスタムツールを定義
+- **例**: Aider、Cursor、その他のAIツールをカスタムツールとして設定可能
 
 ## ライセンス
 
